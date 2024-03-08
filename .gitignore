@@ -1,0 +1,20 @@
+ignore/
+logs/
+
+# For attempts at getting better knowledge about this editor...
+nova.d.ts
+
+# Mac files
+.DS_Store
+Icon
+
+*.icloud
+
+# NextCloud Sync
+.sync*
+*(case clash*
+*(conflicted copy*
+
+# Syncthing
+.stfolder/
+.stignore

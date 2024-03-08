@@ -1,0 +1,77 @@
+{
+	"identifier": "com.abattoirsoftware.Ant",
+	"name": "Ant",
+	"organization": "Abattoir Software",
+	"description": "Lorem ipsum, dolor sit amet.",
+	"version": "1.0",
+	"categories": ["sidebars"],
+
+	"main": "main.js",
+
+	"activationEvents": [
+		"onLanguage:javascript"
+	],
+
+	"entitlements": {
+		"filesystem": "readwrite",
+		"process": true,
+		"requests": true
+	},
+
+	"comments": [
+		"Should activate on a build.xml in workspace.",
+		"If multiple, then the tree should show each one",
+		"-------",
+		"Preferences",
+		"Use built-in ant",
+		"Location of ant",
+		"Location of java",
+	],
+
+	"sidebars": [
+		{
+			"id": "mysidebar",
+			"name": "My Sidebar",
+			"smallImage": "mysidebar-small",
+			"smallSelectedImage": "mysidebar-small-selected",
+			"largeImage": "mysidebar-large",
+			"largeSelectedImage": "mysidebar-large-selected",
+			"sections": [
+				{
+					"id": "mysidebar",
+					"name": "Profiles",
+					"allowMultiple": true,
+					"placeholderText": "No profiles have been created.",
+					"placeholderImage": "mysidebar-placeholder",
+					"headerCommands": [
+						{
+							"title": "Add",
+							"image": "__builtin.add",
+							"tooltip": "Add a new profile",
+							"command": "mysidebar.add"
+						},
+						{
+							"title": "Remove",
+							"image": "__builtin.remove",
+							"tooltip": "Remove the selected profiles",
+							"command": "mysidebar.remove",
+							"when": "viewItem != null"
+						}
+					],
+					"contextCommands": [
+						{
+							"title": "Remove",
+							"command": "mysidebar.remove",
+							"when": "viewItem != null"
+						},
+						{
+							"title": "Show in Finder",
+							"command": "mysidebar.showInFinder",
+							"when": "viewItem != null"
+						}
+					]
+				}
+			]
+		}
+	]
+}
