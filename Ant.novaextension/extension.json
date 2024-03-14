@@ -30,43 +30,32 @@
 
 	"sidebars": [
 		{
-			"id": "mysidebar",
-			"name": "My Sidebar",
-			"smallImage": "mysidebar-small",
+			"id": "antsidebar",
+			"name": "Ant",
+			"smallImage": "ant-small",
 			"smallSelectedImage": "mysidebar-small-selected",
-			"largeImage": "mysidebar-large",
+			"largeImage": "ant-large",
 			"largeSelectedImage": "mysidebar-large-selected",
 			"sections": [
 				{
-					"id": "mysidebar",
-					"name": "Profiles",
+					"id": "antsidebar",
+					"name": "ANT Build Targets",
 					"allowMultiple": true,
-					"placeholderText": "No profiles have been created.",
-					"placeholderImage": "mysidebar-placeholder",
+					"placeholderText": "No Ant 'build.xml' was found in the root of your workspace.",
+					"placeholderImage": "placeholder",
 					"headerCommands": [
 						{
-							"title": "Add",
-							"image": "__builtin.add",
-							"tooltip": "Add a new profile",
-							"command": "mysidebar.add"
-						},
-						{
-							"title": "Remove",
-							"image": "__builtin.remove",
-							"tooltip": "Remove the selected profiles",
-							"command": "mysidebar.remove",
+							"title": "Run",
+							"image": "__builtin.run",
+							"tooltip": "Run Ant target",
+							"command": "antsidebar.run",
 							"when": "viewItem != null"
 						}
 					],
 					"contextCommands": [
 						{
-							"title": "Remove",
-							"command": "mysidebar.remove",
-							"when": "viewItem != null"
-						},
-						{
-							"title": "Show in Finder",
-							"command": "mysidebar.showInFinder",
+							"title": "Run",
+							"command": "antsidebar.run",
 							"when": "viewItem != null"
 						}
 					]

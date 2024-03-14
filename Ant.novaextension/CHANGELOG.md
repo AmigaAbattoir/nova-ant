@@ -1,3 +1,4 @@
 ## Version 0.1
 
-Initial release
+* Started running targets!
+* Initial commit
