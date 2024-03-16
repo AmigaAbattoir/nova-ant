@@ -2,6 +2,9 @@ const xmlToJson = require('./xml-to-json/xmlToJsonStream.js');
 const { showNotification, consoleLogObject } = require("./nova-utils.js");
 
 var treeView = null;
+
+// Should be configurable? But Build should always be at the root of the project?
+var buildXmlPath = nova.workspace.path;
 var buildXmlFileName = "build.xml";
 
 /**
@@ -41,7 +44,7 @@ exports.activate = function() {
 	// Do work when the extension is activated
 	exports.loadAndParseBuildXML(buildXmlFileName);
 
-	nova.fs.watch(nova.path.join(nova.workspace.path, buildXmlFileName), () => {
+	nova.fs.watch(nova.path.join(buildXmlPath, buildXmlFileName), () => {
 		console.log("File changed.. reload!");
 	});
 }
@@ -109,9 +112,63 @@ nova.commands.register("antsidebar.run", () => {
 	if(selection.length>1) {
 		console.log("Only select one!!");
 	} else {
-		console.log("RUN: " + selection.map((e) => e.name));
+		let buildTarget = selection.map((e) => e.name)[0];
+		//console.log("RUN: " + buildTarget);
+		exports.runTarget(buildTarget);
 	}
 });
+
+exports.runTarget = function(targetName) {
+	var path = nova.path.join(nova.path.join(nova.extension.path, "apache-ant-1.10.14"),"bin") + "/ant";
+	var args = new Array;
+
+	args.push(path);
+	args.push(targetName);
+
+	var options = {
+		args: args,
+		cwd: buildXmlPath
+	};
+
+	var process = new Process("/usr/bin/env",options)
+	var stdOut = [];
+	var stdErr = [];
+	if(nova.inDevMode()) {
+		console.log("Options: ");
+		consoleLogObject(options);
+	}
+
+	/** @TODO Show a notification that ANT is running, then change when complete */
+
+	process.onStdout(function(line) { stdOut.push(line.trim()); });
+	process.onStderr(function(line) { stdErr.push(line.trim()); });
+	process.onDidExit(function() {
+		console.log("onDidExit!");
+
+		if(stdOut.length>0) {
+			stdOut.forEach((l) => {
+				console.log(l);
+			});
+		}
+
+		if(stdErr.length>0) {
+			var message = stdErr.splice(0,2).join("\n");
+
+			let request = new NotificationRequest("ant-sidebar");
+			request.title = "Ant Build Error";
+			request.body = message;
+			request.actions = [ "Oops!"];
+			let promise = nova.notifications.add(request);
+		} else {
+			nova.notifications.cancel("ant-sidebar");
+		}
+	});
+
+	process.start();
+	if(nova.inDevMode()) {
+		//console.log("Ant runTarget done");
+	}
+}
 
 class AntItem {
 	constructor(name, type) {

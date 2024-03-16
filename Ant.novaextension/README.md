@@ -12,7 +12,7 @@ Ant requires some additional tools to be installed on your Mac:
 
 ## Usage
 
-To run Ant:
+To display the Ant sidebar:
 
 - Select the **Editor → Ant** menu item; or
 - Open the command palette and type `Ant`
