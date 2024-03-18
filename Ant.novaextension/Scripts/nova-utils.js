@@ -8,7 +8,7 @@
  */
 exports.showNotification = function(title, body, closeButtonName = "") {
 	//if (nova.inDevMode()) {
-		let request = new NotificationRequest("as3mxml-nova-message");
+		let request = new NotificationRequest("ant-nova-message");
 
 		request.title = nova.localize(title);
 		request.body = nova.localize(body);

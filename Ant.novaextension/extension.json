@@ -9,7 +9,7 @@
 	"main": "main.js",
 
 	"activationEvents": [
-		"onLanguage:javascript"
+		"onWorkspaceContains:build.xml"
 	],
 
 	"entitlements": {
@@ -19,13 +19,11 @@
 	},
 
 	"comments": [
-		"Should activate on a build.xml in workspace.",
-		"If multiple, then the tree should show each one",
-		"-------",
+		"@TODO....",
 		"Preferences",
-		"Use built-in ant",
-		"Location of ant",
 		"Location of java",
+		"Location of custom ant",
+		"Location of properites (should look in XML)"
 	],
 
 	"sidebars": [
@@ -40,22 +38,34 @@
 				{
 					"id": "antsidebar",
 					"name": "ANT Build Targets",
-					"allowMultiple": true,
+					"allowMultiple": false,
 					"placeholderText": "No Ant 'build.xml' was found in the root of your workspace.",
 					"placeholderImage": "placeholder",
 					"headerCommands": [
 						{
 							"title": "Run",
-							"image": "__builtin.run",
-							"tooltip": "Run Ant target",
+							"image": "__builtin.next",
+							"tooltip": "Run a single, selected Ant target. If multiple are selected, this won't work. (Need to figure out how to make this only work for single items)",
 							"command": "antsidebar.run",
-							"when": "viewItem != null"
+							"when": "viewItem.length != 1"
+						},
+						{
+							"title": "Show in Build XML",
+							"image": "__builtin.path",
+							"tooltip": "Jump to line in the Ant Build.XML file ",
+							"command": "antsidebar.view",
+							"comment": " WHEN, but should only be if properties file exists"
 						}
 					],
 					"contextCommands": [
 						{
 							"title": "Run",
 							"command": "antsidebar.run",
+							"when": "viewItem != null"
+						},
+						{
+							"title": "Show in Build XML",
+							"command": "antsidebar.view",
 							"when": "viewItem != null"
 						}
 					]

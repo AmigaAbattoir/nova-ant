@@ -1,8 +1,4 @@
-**Ant** provides sidebar integration with **A Helpful Tool**, including the most important feature, something that's really helpful, and _a little-known secret!_
-
-<!--
-![](https://nova.app/images/en/dark/sidebar.png)
--->
+**Ant** provides sidebar integration with **Apache Ant**, allowing you to click and launch build tasks.
 
 ## Requirements
 
@@ -10,12 +6,14 @@ Ant requires some additional tools to be installed on your Mac:
 
 - Java 8 or newer
 
+Included in the extensions is Apache Ant 1.10.14.
+
 ## Usage
 
 To display the Ant sidebar:
 
-- Select the **Editor → Ant** menu item; or
-- Open the command palette and type `Ant`
+- Click on the "All Sidebars" button.
+- Select **Ant** or drag to a sidebar area
 
 ### Configuration
 
