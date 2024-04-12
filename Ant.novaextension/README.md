@@ -6,6 +6,8 @@ Ant requires some additional tools to be installed on your Mac:
 
 - Java 8 or newer
 
+Make sure that `JAVA_HOME` has been set, and points to a JDK in you system. Otherwise, you may get errors if the build is using `javac`.
+
 Included in the extensions is Apache Ant 1.10.14.
 
 ## Usage
