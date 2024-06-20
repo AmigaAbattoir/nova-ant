@@ -2,8 +2,8 @@
 	"identifier": "com.abattoirsoftware.Ant",
 	"name": "Ant",
 	"organization": "Abattoir Software",
-	"description": "Lorem ipsum, dolor sit amet.",
-	"version": "1.0",
+	"description": "Extension for Nova's Panic, to use Apache Ant",
+	"version": "0.2",
 	"categories": ["sidebars"],
 
 	"main": "main.js",

@@ -1,4 +1,4 @@
-const xmlToJson = require('./xml-to-json/xmlToJsonStream.js');
+const xmlToJson = require('./not-so-simple-simple-xml-to-json.js');
 const { showNotification, consoleLogObject } = require("./nova-utils.js");
 
 var treeView = null;
@@ -45,6 +45,7 @@ exports.activate = function() {
 	// Do work when the extension is activated
 	exports.loadAndParseBuildXML(buildXmlFileName);
 
+	// Watch the build file. If it changes, then reload it.
 	nova.fs.watch(nova.path.join(buildXmlPath, buildXmlFileName), () => {
 		console.log("File changed.. reload!");
 		exports.loadAndParseBuildXML(buildXmlFileName);
@@ -57,29 +58,27 @@ exports.loadAndParseBuildXML = function(filename) {
 
 	// If not a valid or empty XML, clear the window
 	if(buildXmlString==null || buildXmlString=="") {
+		showNotification("Unable to use empty build.xml");
 		treeView = new TreeView("antsidebar", {
 			dataProvider: null
 		});
 		return;
 	}
 
+	// Parse the XML to JSON.
+	var buildJson = new xmlToJson.ns3x2j(buildXmlString);
+
 	// Check if the data really changed, if not just leave our tree alone!
-	if(buildXmlString==previousBuildXmlData) {
+	if(buildJson.xmlString==previousBuildXmlData) {
 		return;
 	}
 
 	// Now, store this so we don't have to rebuild if the same content!
-	previousBuildXmlData = buildXmlString
+	previousBuildXmlData = buildJson.xmlString;
 
-	// Parse the XML to JSON.
-	var buildJson = new xmlToJson.XMLtoJSON(buildXmlString);
-/*
-	console.log("\n\n\n\n DONE PARSING \n\n\n");
-	consoleLogObject(buildJson.json);
-*/
 	// Create the TreeView
 	treeView = new TreeView("antsidebar", {
-		dataProvider: new AntDataProvider(buildJson.json.project.name,buildJson.json.project.target)
+		dataProvider: new AntDataProvider(buildJson.getNodeAttributesByName("project")[0]["name"],buildJson.findNodesByName("target"))
 	});
 /*
 	treeView.onDidChangeSelection((selection) => {
@@ -264,19 +263,23 @@ class AntDataProvider {
 		// Add to the holder each build
 		// Ideally, additional tags would be handled, but parsing the XML isn't fun.
 		items.forEach((a) => {
-			if(a.name!==undefined) {
+			console.log("------------");
+			consoleLogObject(a);
+			if(a["@"].name!==undefined) {
 				let element;
-				if(a.description) {
-					element = new AntItem(a.name,"target-with-desc");
+				if(a["@"].description) {
+					element = new AntItem(a["@"].name,"target-with-desc");
 				} else {
-					element = new AntItem(a.name,"target");
+					element = new AntItem(a["@"].name,"target");
 				}
 				holder.addChild(element);
 
-				if(a.available) {
-					a.available.forEach((av) => {
-						if(av.file) {
-							element.addChild(new AntItem("file="+av.file,"file"));
+				//let avaiable = xmlToJson.getCurrentNodeChildrenByName(a,"available");
+				let available = a.children.filter(child => child.name == "available");
+				if(available) {
+					available.forEach((av) => {
+						if(av["@"].file) {
+							element.addChild(new AntItem("file="+av["@"].file,"file"));
 						}
 					})
 				}

@@ -6,5 +6,4 @@ Includes Apache Ant 1.10.14.
 
 # Notes
 
-Currently, very limitted functionallity. Does not like empty <target> tags! It uses a modified version of [alabianca/xml-to-json](https://github.com/alabianca/xml-to-json) and a fix from [recalcitrantQ/xml-to-json](https://github.com/recalcitrantQ/xml-to-json/commits/master/) to handle the XML to JSON.
-Which still has an error where if the first tag does not have content, it sometimes gets added as an empty element. Quick fix is just to include a
+Currently, very limited functionality. Basically finds all targets. If used to using something like Eclipse, it does not show all elements like `properties`,`echo`, etc. Right now, only `additional` `file`.
