@@ -126,7 +126,7 @@ exports.openBuildAndGoTo = function(type, name) {
 				check1 = "file=\"" + fileName + "\"";
 				check2 = "file='" + fileName + "'";
 			} else {
-				//console.log("Not able to go to that line yet");
+				console.log("Not able to go to that line yet");
 				return;
 			}
 
@@ -253,7 +253,7 @@ class AntItem {
  * Creates the Sidebar tree
  */
 class AntDataProvider {
-	constructor(projectName, items) {
+	constructorButSingle(projectName, items) {
 		let antItems = [];
 
 		// Have a holder for the build name
@@ -261,10 +261,7 @@ class AntDataProvider {
 		antItems.push(holder);
 
 		// Add to the holder each build
-		// Ideally, additional tags would be handled, but parsing the XML isn't fun.
 		items.forEach((a) => {
-			console.log("------------");
-			consoleLogObject(a);
 			if(a["@"].name!==undefined) {
 				let element;
 				if(a["@"].description) {
@@ -274,28 +271,114 @@ class AntDataProvider {
 				}
 				holder.addChild(element);
 
-				//let avaiable = xmlToJson.getCurrentNodeChildrenByName(a,"available");
-				let available = a.children.filter(child => child.name == "available");
-				if(available) {
-					available.forEach((av) => {
-						if(av["@"].file) {
-							element.addChild(new AntItem("file="+av["@"].file,"file"));
+				// Should we go through each child... but need to go through their children too!
+				a.children.forEach((c) => {
+					switch(c.name) {
+						case "available": {
+							element.addChild(new AntItem("file="+c["@"].file,"available"));
+							break;
 						}
-					})
+						case "mkdir":
+						case "delete": {
+							element.addChild(new AntItem(c.name+" "+c["@"].dir,c.name));
+							break;
+						}
+						case "jar": {
+							element.addChild(new AntItem(c.name+" "+c["@"].destfile,c.name));
+							break;
+						}
+						case "unzip": {
+							element.addChild(new AntItem(c.name+" "+c["@"].src,c.name));
+							break;
+						}
+						default: {
+							element.addChild(new AntItem(c.name,c.name));
+							break;
+						}
+					}
+				});
+			}
+		});
+
+		this.rootItems = antItems;
+	}
+
+	constructor(projectName, items) {
+		let antItems = [];
+
+		// Have a holder for the build name
+		let holder = new AntItem(projectName,"ant");
+		antItems.push(holder);
+
+		// Add to the holder each build
+		items.forEach((a) => {
+			if(a["@"].name!==undefined) {
+				let element;
+				if(a["@"].description) {
+					element = new AntItem(a["@"].name,"target-with-desc");
+				} else {
+					element = new AntItem(a["@"].name,"target");
 				}
-				/** @TODO Current XML to JSON makes a mess, this doesn't match up with other Ant UIs
-				/* Other elements should be added and nested as such!
-				if(a.property) {
-					a.property.forEach((p) => ) {
-						// Do Something to see if it's a file, then we can add
-						// a click to edit button or something!
+				holder.children.push(element);
+
+				let goThroughChildren = (parent, items) => {
+					let childElement;
+
+					if(items.children) {
+						// Should we go through each child... but need to go through their children too!
+						items.children.forEach((c) => {
+							switch(c.name) {
+								case "available": {
+									if(parent.type=="target") {
+										childElement = new AntItem("file="+c["@"].file,"available");
+									} else {
+
+									}
+									break;
+								}
+								case "pathconvert": {
+									childElement = new AntItem(c.name,"pathconvert");
+									break;
+								}
+								case "fileset": {
+									if(c["@"].id!==undefined) {
+										childElement = new AntItem(c["@"].id,"flleset");
+									} else {
+										childElement = new AntItem(c.name,"flleset");
+									}
+									break;
+								}
+								case "mkdir":
+								case "delete": {
+									childElement = new AntItem(c.name+" "+c["@"].dir,c.name);
+									break;
+								}
+								case "jar": {
+									childElement = new AntItem(c.name+" "+c["@"].destfile,c.name);
+									break;
+								}
+								case "unzip": {
+									childElement = new AntItem(c.name+" "+c["@"].src,c.name);
+									break;
+								}
+									childElement = new AntItem(c.name,c.name);
+								default: {
+									childElement = new AntItem(c.name,c.name);
+									break;
+								}
+							}
+							if(childElement) {
+								parent.addChild(childElement);
+							}
+
+							if(c.children) {
+								goThroughChildren(childElement,c);
+							}
+						});
 					}
 				}
-				if(a.fail) {
-					a.fail.forEach((f) => {
-					})
-				}
-				*/
+
+				goThroughChildren(element, a);
 			}
 		});
 
@@ -319,11 +402,13 @@ class AntDataProvider {
 		// Converts an element into its display (TreeItem) representation
 		let item = new TreeItem(element.name);
 
-		//console.log("element type: " + element.type);
-		if (element.children.length > 0) {
+		if(element.type=="ant") { // Always show the element.type of "ant" as expended.
+			item.collapsibleState = TreeItemCollapsibleState.Expanded;
+			item.contextValue = element.name;
+		} else if (element.children.length > 0) { // Otherwise, if there are no children, don't show the expander
 			item.collapsibleState = TreeItemCollapsibleState.Collapsed;
 			item.contextValue = element.name;
-		} else {
+		} else { // Anything that doesn't have children, should send a double click for
 			item.command = "antsidebar.doubleClick";
 			item.contextValue = "info";
 		}
@@ -335,8 +420,15 @@ class AntDataProvider {
 			item.image = "target-light";
 		} else if(element.type=="ant") {
 			item.image = "ant";
-		} else {
+		} else if(element.type=="available") {
 			item.image = "__filetype.blank";
+		} else if(element.type=="pathconvert") {
+			item.image = "__symbol.tag-image";
+		} else if(element.type=="flleset") {
+			//item.image = "__symbol.package";
+			item.image = "__symbol.block";
+		} else {
+			item.image = "__symbol.tag-media";
 		}
 
 		return item;

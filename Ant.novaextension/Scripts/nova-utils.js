@@ -88,7 +88,7 @@ exports.saveAllFiles = function() {
 }
 
 exports.consoleLogObject = function(object) {
-	console.log(JSON.stringify(object,null,4));
+	console.log(JSON.stringify((object!=null ? object : " null"),null,4));
 }
 
 exports.rangeToLspRange = function(document, range) {
