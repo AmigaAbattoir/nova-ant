@@ -332,7 +332,7 @@ class AntDataProvider {
 									if(parent.type=="target") {
 										childElement = new AntItem("file="+c["@"].file,"available");
 									} else {
-
+										childElement = new AntItem(c.name,"tag");
 									}
 									break;
 								}
@@ -378,7 +378,9 @@ class AntDataProvider {
 					}
 				}
 
-				goThroughChildren(element, a);
+				if(a.children && a.children.length>0) {
+					goThroughChildren(element, a);
+				}
 			}
 		});
 
