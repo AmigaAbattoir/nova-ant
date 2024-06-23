@@ -9,7 +9,7 @@
  * @author ChatGPT and Christopher Pollati
  */
 exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
-	constructor(xmlString) {
+	constructor(xmlString, trackNodeText = false) {
 		this.xmlString = xmlString;
 		this.currentIndex = 0;
 		this.lineNumber = 1;   // Track the current line number
@@ -59,6 +59,15 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 			};
 		} else {
 			this.showErrorContext("Unexpected character at position " + this.getLineColumn());
+		}
+
+		// If there is only 1 child, and it is labled #text, then it really should be the
+		// text content of this node!
+		if(children.length==1) {
+			if(children[0].name=="#text") {
+				textContent = children[0].textContent;
+				children = [];
+			}
 		}
 
 		return {
@@ -171,6 +180,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 					}
 					this.currentIndex++; // Skip '>'
 					if (textContent.trim().length > 0) {
+						console.log(" FOund some text?!?! What?? [[" + textContent + "]]");
 						children.push({
 							name: "#text",
 							"@": {},
