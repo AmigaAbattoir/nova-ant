@@ -1,3 +1,9 @@
+## Version 0.4
+
+* Changed NS3X2J to handle parsing unmodified XML string.
+* NS3X2J stores position of elements
+* Fix context menus to only enable relevant options.
+
 ## Version 0.3
 
 * Show nested commands in tree.

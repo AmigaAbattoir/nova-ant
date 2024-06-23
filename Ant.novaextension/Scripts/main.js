@@ -77,26 +77,8 @@ exports.loadAndParseBuildXML = function(filename) {
 	previousBuildXmlData = buildJson.xmlString;
 
 	// Create the TreeView
-	treeView = new TreeView("antsidebar", {
-		dataProvider: new AntDataProvider(buildJson.getNodeAttributesByName("project")[0]["name"],buildJson.findNodesByName("target"))
-	});
-/*
-	treeView.onDidChangeSelection((selection) => {
-		// console.log("New selection: " + selection.map((e) => e.name));
-	});
+	treeView = new TreeView("antsidebar", { dataProvider: new AntDataProvider(buildJson) });
 
-	treeView.onDidExpandElement((element) => {
-		// console.log("Expanded: " + element.name);
-	});
-
-	treeView.onDidCollapseElement((element) => {
-		// console.log("Collapsed: " + element.name);
-	});
-
-	treeView.onDidChangeVisibility(() => {
-		// console.log("Visibility Changed");
-	});
-*/
 	// TreeView implements the Disposable interface
 	nova.subscriptions.add(treeView);
 }
@@ -106,47 +88,21 @@ exports.deactivate = function() {
 }
 
 exports.openBuildAndGoTo = function(type, name) {
-	//console.log(nova.path.join(buildXmlPath, buildXmlFileName));
 	nova.workspace.openFile(nova.path.join(buildXmlPath, buildXmlFileName)).then((textDocument) => {
 		var editor = nova.workspace.activeTextEditor;
 
 		if (editor) {
 			var selection = treeView.selection;
-			var type = selection.map((e) => e.type)[0];
 			var selectedName = selection.map((e) => e.name)[0];
+			var selectedNodeName = selection.map((e) => e.nodeName)[0];
+			var selectedLine = selection.map((e) => e.line)[0];
+			var selectedColumn = selection.map((e) => e.column)[0];
 
-			/** @TODO Use regex. You can do that in Nova, right? It doesn't seems to work. */
-			var check1, check2;
-			if(type=="target" || type=="target-with-desc") {
-				check1 = "name=\"" + selectedName + "\"";
-				check2 = "name='" + selectedName + "'";
-			} else if(type=="file") {
-				var fileName = selectedName.split("=")[1];
-				//console.log("Fileanme [[" + fileName + "]]");
-				check1 = "file=\"" + fileName + "\"";
-				check2 = "file='" + fileName + "'";
-			} else {
-				console.log("Not able to go to that line yet");
-				return;
-			}
-
-			// Get all of the document
-			var allText = editor.getTextInRange(new Range(0, editor.document.length));
-			// Split on line break
-			var lines = allText.split(/\r?\n/);
-
-			var count = 0;
-			while(count<lines.length) {
-				//console.log("LINE " + count + ": [[[" + lines[count] + "]]]");
-				//console.log(check1 + " indexOf() " + lines[count].indexOf(check1))
-				//console.log(check2 + " indexOf() " + lines[count].indexOf(check2))
-				if(lines[count].indexOf(check1)!=-1 || lines[count].indexOf(check2)!=-1) {
-					//console.log("Found at line " + count);
-					editor.moveToTop();
-					editor.moveDown(count);
-					count = lines.lenght;
-				}
-				count++;
+			if(selectedLine!=0) {
+				editor.moveToTop();
+				editor.moveDown(selectedLine-1);
+				editor.moveRight(selectedColumn);
+				editor.selectRight(selectedNodeName.length);
 			}
 		}
 	});
@@ -159,19 +115,7 @@ nova.commands.register("antsidebar.view", () => {
 	exports.openBuildAndGoTo();
 });
 
-nova.commands.register("antsidebar.doubleClick", () => {
-	// Invoked when an item is double-clicked
-	var selection = treeView.selection;
-	var type = selection.map((e) => e.type)[0];
-	var selectedName = selection.map((e) => e.name)[0];
-	//console.log("DoubleClick: " + selectedName);
-	if(type=="file") {
-		exports.openBuildAndGoTo(type, selectedName);
-	}
-});
-
 nova.commands.register("antsidebar.run", () => {
-	// Invoked when an item is double-clicked
 	var selection = treeView.selection;
 	let buildTarget = selection.map((e) => e.name)[0];
 	//console.log("RUN: " + buildTarget);
@@ -236,9 +180,12 @@ exports.runTarget = function(targetName) {
 }
 
 class AntItem {
-	constructor(name, type) {
+	constructor(name, type, nodeName, line = 0, column = 0) {
 		this.name = name;
 		this.type = type;
+		this.nodeName = nodeName;
+		this.line = line;
+		this.column = column;
 		this.children = [];
 		this.parent = null;
 	}
@@ -253,11 +200,16 @@ class AntItem {
  * Creates the Sidebar tree
  */
 class AntDataProvider {
-	constructorButSingle(projectName, items) {
+	constructor(buildJson) {
+		let projectName = buildJson.getNodeAttributesByName("project")[0]["name"];
+		let items = buildJson.findNodesByName("target");
+		let position = buildJson.getNodePositionsByName("project")[0];
+
+		// Items that are part of the Ant Build
 		let antItems = [];
 
 		// Have a holder for the build name
-		let holder = new AntItem(projectName,"ant");
+		let holder = new AntItem(projectName,"ant","project",position.line,position.column);
 		antItems.push(holder);
 
 		// Add to the holder each build
@@ -265,109 +217,66 @@ class AntDataProvider {
 			if(a["@"].name!==undefined) {
 				let element;
 				if(a["@"].description) {
-					element = new AntItem(a["@"].name,"target-with-desc");
+					element = new AntItem(a["@"].name,"target-with-desc","target",a.line,a.column);
 				} else {
-					element = new AntItem(a["@"].name,"target");
-				}
-				holder.addChild(element);
-
-				// Should we go through each child... but need to go through their children too!
-				a.children.forEach((c) => {
-					switch(c.name) {
-						case "available": {
-							element.addChild(new AntItem("file="+c["@"].file,"available"));
-							break;
-						}
-						case "mkdir":
-						case "delete": {
-							element.addChild(new AntItem(c.name+" "+c["@"].dir,c.name));
-							break;
-						}
-						case "jar": {
-							element.addChild(new AntItem(c.name+" "+c["@"].destfile,c.name));
-							break;
-						}
-						case "unzip": {
-							element.addChild(new AntItem(c.name+" "+c["@"].src,c.name));
-							break;
-						}
-						default: {
-							element.addChild(new AntItem(c.name,c.name));
-							break;
-						}
-					}
-				});
-			}
-		});
-
-		this.rootItems = antItems;
-	}
-
-	constructor(projectName, items) {
-		let antItems = [];
-
-		// Have a holder for the build name
-		let holder = new AntItem(projectName,"ant");
-		antItems.push(holder);
-
-		// Add to the holder each build
-		items.forEach((a) => {
-			if(a["@"].name!==undefined) {
-				let element;
-				if(a["@"].description) {
-					element = new AntItem(a["@"].name,"target-with-desc");
-				} else {
-					element = new AntItem(a["@"].name,"target");
+					element = new AntItem(a["@"].name,"target","target",a.line,a.column);
 				}
 				holder.children.push(element);
 
 				let goThroughChildren = (parent, items) => {
-					let childElement;
-
+					let childElement, childName, childType;
 					if(items.children) {
-						// Should we go through each child... but need to go through their children too!
 						items.children.forEach((c) => {
 							switch(c.name) {
 								case "available": {
 									if(parent.type=="target") {
-										childElement = new AntItem("file="+c["@"].file,"available");
+										childName = "file="+c["@"].file
+										childType = "available";
 									} else {
-										childElement = new AntItem(c.name,"tag");
+										childName = c.name;
+										childType = "tag";
 									}
 									break;
 								}
 								case "pathconvert": {
-									childElement = new AntItem(c.name,"pathconvert");
+									childName = c.name;
+									childType = c.name;
 									break;
 								}
 								case "fileset": {
 									if(c["@"].id!==undefined) {
-										childElement = new AntItem(c["@"].id,"flleset");
+										childName = c["@"].id
 									} else {
-										childElement = new AntItem(c.name,"flleset");
+										childName = c.name;
 									}
+									childType = c.name;
 									break;
 								}
 								case "mkdir":
 								case "delete": {
-									childElement = new AntItem(c.name+" "+c["@"].dir,c.name);
+									childName = c.name+" "+c["@"].dir;
+									childType = c.name;
 									break;
 								}
 								case "jar": {
-									childElement = new AntItem(c.name+" "+c["@"].destfile,c.name);
+									childName = c.name+" "+c["@"].destfile;
+									childType = c.name;
 									break;
 								}
 								case "unzip": {
-									childElement = new AntItem(c.name+" "+c["@"].src,c.name);
+									childName = c.name+" "+c["@"].src;
+									childType = c.name;
 									break;
 								}
-									childElement = new AntItem(c.name,c.name);
 								default: {
-									childElement = new AntItem(c.name,c.name);
+									childName = c.name;
+									childType = c.name;
 									break;
 								}
 							}
-							if(childElement) {
+
+							if(childName!="") {
+								childElement = new AntItem(childName, childType, c.name, c.line, c.column);
 								parent.addChild(childElement);
 							}
 
@@ -404,33 +313,37 @@ class AntDataProvider {
 		// Converts an element into its display (TreeItem) representation
 		let item = new TreeItem(element.name);
 
+		// Figure out if it should have a collapsible state of open/closed otherwise none
 		if(element.type=="ant") { // Always show the element.type of "ant" as expended.
 			item.collapsibleState = TreeItemCollapsibleState.Expanded;
-			item.contextValue = element.name;
 		} else if (element.children.length > 0) { // Otherwise, if there are no children, don't show the expander
 			item.collapsibleState = TreeItemCollapsibleState.Collapsed;
-			item.contextValue = element.name;
-		} else { // Anything that doesn't have children, should send a double click for
-			item.command = "antsidebar.doubleClick";
-			item.contextValue = "info";
 		}
+		item.contextValue = element.type;
 
 		// Determine type of icon
-		if(element.type=="target") {
-			item.image = "target";
-		} else if(element.type=="target-with-desc") {
-			item.image = "target-light";
-		} else if(element.type=="ant") {
-			item.image = "ant";
-		} else if(element.type=="available") {
-			item.image = "__filetype.blank";
-		} else if(element.type=="pathconvert") {
-			item.image = "__symbol.tag-image";
-		} else if(element.type=="flleset") {
-			//item.image = "__symbol.package";
-			item.image = "__symbol.block";
-		} else {
-			item.image = "__symbol.tag-media";
+		switch(element.type) {
+			case "target":
+				item.image = "target";
+			break;
+			case "target-with-desc":
+				item.image = "target-light";
+			break;
+			case "ant":
+				item.image = "ant";
+			break;
+			case "available":
+				item.image = "__filetype.blank";
+			break;
+			case "pathconvert":
+				item.image = "__symbol.tag-image";
+			break;
+			case "flleset":
+				item.image = "__symbol.block";
+			break;
+			default:
+				item.image = "__symbol.tag";
+			break;
 		}
 
 		return item;

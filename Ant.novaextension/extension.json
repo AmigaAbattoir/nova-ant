@@ -3,7 +3,7 @@
 	"name": "Ant",
 	"organization": "Abattoir Software",
 	"description": "Extension for Nova's Panic, to use Apache Ant",
-	"version": "0.3",
+	"version": "0.4",
 	"categories": ["sidebars"],
 
 	"main": "main.js",
@@ -23,7 +23,6 @@
 		"Preferences",
 		"Location of java",
 		"Location of custom ant",
-		"Location of properites (should look in XML)"
 	],
 
 	"sidebars": [
@@ -39,13 +38,13 @@
 					"id": "antsidebar",
 					"name": "ANT Build Targets",
 					"allowMultiple": false,
-					"placeholderText": "No Ant 'build.xml' was found in the root of your workspace.",
+					"placeholderText": "Could not find an Ant 'build.xml' in your workspace.",
 					"placeholderImage": "placeholder",
 					"headerCommands": [
 						{
 							"title": "Run",
 							"image": "__builtin.next",
-							"tooltip": "Run a single, selected Ant target. If multiple are selected, this won't work. (Need to figure out how to make this only work for single items)",
+							"tooltip": "Run a single, selected Ant target.",
 							"command": "antsidebar.run",
 							"when": "viewItem.length != 1"
 						},
@@ -54,14 +53,13 @@
 							"image": "__builtin.path",
 							"tooltip": "Jump to line in the Ant Build.XML file ",
 							"command": "antsidebar.view",
-							"comment": " WHEN, but should only be if properties file exists"
 						}
 					],
 					"contextCommands": [
 						{
 							"title": "Run",
 							"command": "antsidebar.run",
-							"when": "viewItem != null"
+							"when": "viewItem==='target-with-desc' || viewItem==='target'"
 						},
 						{
 							"title": "Show in Build XML",

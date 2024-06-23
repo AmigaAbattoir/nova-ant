@@ -13,7 +13,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		this.xmlString = xmlString;
 		this.currentIndex = 0;
 		this.lineNumber = 1;   // Track the current line number
-		this.columnNumber = 1; // Track the current column number
+		this.columnNumber = 0; // Track the current column number
 		this.jsonArray = [];
 		const rootNode = this.parseNode();
 		if (rootNode) {
@@ -31,12 +31,15 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 			this.showErrorContext("Expected '<' at position " + this.getLineColumn());
 		}
 
-		this.currentIndex++; // Skip '<'
+		this.moveCurrentIndex(1); // Skip '<'
 
 		if (this.xmlString[this.currentIndex] === '!') {
 			this.skipComment();
 			return this.parseNode(); // Recursively call parseNode after skipping the comment
 		}
+
+		let lineStart = this.lineNumber;
+		let colStart = this.columnNumber;
 
 		const nodeName = this.parseNodeName();
 		const attributes = this.parseAttributes();
@@ -47,34 +50,38 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		let textContent = null;
 
 		if (this.xmlString[this.currentIndex] === '>') {
-			this.currentIndex++; // Skip '>'
+			this.moveCurrentIndex(1); // Skip '>'
 			children = this.parseChildren(nodeName);
+
+			// If there is only 1 child, and it is labled #text, then it really should be the
+			// text content of this node!
+			if(children.length==1) {
+				if(children[0].name=="#text") {
+					textContent = children[0].textContent;
+					children = [];
+				}
+			}
 		} else if (this.xmlString[this.currentIndex] === '/' && this.xmlString[this.currentIndex + 1] === '>') {
-			this.currentIndex += 2; // Skip '/>'
+			this.moveCurrentIndex(2); // Skip '/>'
 			return {
 				name: nodeName,
 				"@": attributes,
 				children: [],
-				textContent: null
+				textContent: null,
+				line: lineStart,
+				column: colStart
 			};
 		} else {
 			this.showErrorContext("Unexpected character at position " + this.getLineColumn());
-		}
-
-		// If there is only 1 child, and it is labled #text, then it really should be the
-		// text content of this node!
-		if(children.length==1) {
-			if(children[0].name=="#text") {
-				textContent = children[0].textContent;
-				children = [];
-			}
 		}
 
 		return {
 			name: nodeName,
 			"@": attributes,
 			children: children,
-			textContent: textContent
+			textContent: textContent,
+			line: lineStart,
+			column: colStart
 		};
 	}
 
@@ -82,21 +89,18 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		if (this.xmlString.substr(this.currentIndex, 3) !== "!--") {
 			this.showErrorContext("Expected '!--' for comment at position " + this.getLineColumn());
 		}
-		this.currentIndex += 3; // Skip '!--'
+		this.moveCurrentIndex(3); // Skip '!--'
 
 		let depth = 1;
 		while (depth > 0 && this.currentIndex < this.xmlString.length - 3) {
 			if (this.xmlString.substr(this.currentIndex, 3) === "-->") {
 				depth--;
-				this.currentIndex += 3; // Skip '-->'
+				this.moveCurrentIndex(3); // Skip '-->'
 			} else if (this.xmlString.substr(this.currentIndex, 4) === "<!--") {
 				depth++;
-				this.currentIndex += 4; // Skip '<!--'
+				this.moveCurrentIndex(4); // Skip '<!--'
 			} else {
-				if (this.xmlString[this.currentIndex] === '\n') {
-					this.moveToNextLine();
-				}
-				this.currentIndex++;
+				this.nextCharCountingLine();
 			}
 		}
 
@@ -105,9 +109,16 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		}
 	}
 
+	moveCurrentIndex(value) {
+		this.currentIndex += value;
+		this.columnNumber += value;
+	}
+
 	nextCharCountingLine() {
 		if (this.xmlString[this.currentIndex] === '\n') {
 			this.moveToNextLine();
+		} else {
+			this.columnNumber++;
 		}
 		this.currentIndex++;
 	}
@@ -135,7 +146,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 			if (this.xmlString[this.currentIndex] !== '=') {
 				this.showErrorContext("Expected '=' after attribute name at position " + this.getLineColumn());
 			}
-			this.currentIndex++; // Skip '='
+			this.moveCurrentIndex(1); // Skip '='
 			this.skipWhitespace();
 			const value = this.parseAttributeValue();
 			attributes[name] = value;
@@ -148,7 +159,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		if (quote !== '"' && quote !== "'") {
 			this.showErrorContext("Expected '\"' or \"'\" for attribute value at position " + this.getLineColumn());
 		}
-		this.currentIndex++; // Skip opening quote
+		this.moveCurrentIndex(1); // Skip opening quote
 		const start = this.currentIndex;
 		while (this.currentIndex < this.xmlString.length && this.xmlString[this.currentIndex] !== quote) {
 			this.nextCharCountingLine();
@@ -157,7 +168,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 			this.showErrorContext("Unterminated attribute value starting at position " + start);
 		}
 		const value = this.xmlString.substring(start, this.currentIndex);
-		this.currentIndex++; // Skip closing quote
+		this.moveCurrentIndex(1); // Skip closing quote
 		return value;
 	}
 
@@ -168,8 +179,9 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		while (this.currentIndex < this.xmlString.length) {
 			this.skipWhitespace();
 			if (this.xmlString[this.currentIndex] === '<') {
+				var lineStart = this.lineNumber;
 				if (this.xmlString[this.currentIndex + 1] === '/') {
-					this.currentIndex += 2; // Skip '</'
+					this.moveCurrentIndex(2); // Skip '</'
 					const endTagName = this.parseNodeName();
 					if (endTagName !== parentNodeName) {
 						this.showErrorContext(`Expected closing tag </${parentNodeName}> but found </${endTagName}> at position ` + this.getLineColumn());
@@ -180,18 +192,19 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 					}
 					this.currentIndex++; // Skip '>'
 					if (textContent.trim().length > 0) {
-						console.log(" FOund some text?!?! What?? [[" + textContent + "]]");
 						children.push({
 							name: "#text",
 							"@": {},
 							children: [],
-							textContent: textContent.trim()
+							textContent: textContent, // Don't trim text content!
+							line: lineStart,
+							column: this.columnNumber,
 						});
 					}
 					break;
 				} else if (this.xmlString.substr(this.currentIndex, 4) === "<!--") {
 					// Move the currentIndex over one
-					this.currentIndex++;
+					this.moveCurrentIndex(1);
 					this.skipComment(); // Skip comment
 				} else {
 					const childNode = this.parseNode();
@@ -222,6 +235,17 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		const nodes = this.findNodesByName(nodeName);
 		if (nodes.length > 0) {
 			return nodes.map(node => node['@']);
+		}
+		return [];
+	}
+
+	getNodePositionsByName(nodeName) {
+		const nodes = this.findNodesByName(nodeName);
+		if (nodes.length > 0) {
+			return nodes.map(node => ({
+				line: node.line,
+				column: node.column
+			}));
 		}
 		return [];
 	}
@@ -271,7 +295,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 
 	moveToNextLine() {
 		this.lineNumber++;
-		this.columnNumber = 1; // Reset column number at the start of each new line
+		this.columnNumber = 0; // Reset column number at the start of each new line
 	}
 
 	getLineColumn() {
