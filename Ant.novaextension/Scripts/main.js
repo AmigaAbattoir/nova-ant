@@ -2,11 +2,11 @@ const xmlToJson = require('./not-so-simple-simple-xml-to-json.js');
 const { showNotification, consoleLogObject } = require("./nova-utils.js");
 
 var treeView = null;
+var previousBuildXmlData = "";
 
 // Should be configurable? But Build should always be at the root of the project, right?
 var buildXmlPath = nova.workspace.path;
 var buildXmlFileName = "build.xml";
-var previousBuildXmlData = "";
 
 /**
  * Opens a file and dumps it into a string.
@@ -41,17 +41,25 @@ function getStringOfWorkspaceFile(filename, trimAll = true) {
 	return contents;
 }
 
+/**
+ * When the extension is activated, we want to load the build.xml and then set up a watch on that file so if it changes
+ * we then update the view
+ */
 exports.activate = function() {
 	// Do work when the extension is activated
 	exports.loadAndParseBuildXML(buildXmlFileName);
 
 	// Watch the build file. If it changes, then reload it.
 	nova.fs.watch(nova.path.join(buildXmlPath, buildXmlFileName), () => {
-		console.log("File changed.. reload!");
 		exports.loadAndParseBuildXML(buildXmlFileName);
 	});
 }
 
+/**
+ * Loads and parses the build.xml file and creates the treeview as needed.
+ *
+ * @param {String} filename - The name of the workspace file to get
+ */
 exports.loadAndParseBuildXML = function(filename) {
 	// If there's a build.xml, parse it
 	var buildXmlString = getStringOfWorkspaceFile("build.xml",false);
@@ -83,31 +91,44 @@ exports.loadAndParseBuildXML = function(filename) {
 	nova.subscriptions.add(treeView);
 }
 
+/**
+ * When the extension deactivates, clean up things.
+ */
 exports.deactivate = function() {
-	// Clean up state before the extension is deactivated
+	treeView = null;
+	previousBuildXmlData = "";
 }
 
-exports.openBuildAndGoTo = function(type, name) {
+/**
+ * Used to open the build.xml. If something is selected in the treeview, then we will jump to that specific location
+ */
+exports.openBuildAndGoTo = function() {
 	nova.workspace.openFile(nova.path.join(buildXmlPath, buildXmlFileName)).then((textDocument) => {
 		var editor = nova.workspace.activeTextEditor;
 
 		if (editor) {
 			var selection = treeView.selection;
-			var selectedName = selection.map((e) => e.name)[0];
-			var selectedNodeName = selection.map((e) => e.nodeName)[0];
-			var selectedLine = selection.map((e) => e.line)[0];
-			var selectedColumn = selection.map((e) => e.column)[0];
+			if(selection) {
+				var selectedLine = selection.map((e) => e.line)[0];
 
-			if(selectedLine!=0) {
-				editor.moveToTop();
-				editor.moveDown(selectedLine-1);
-				editor.moveRight(selectedColumn);
-				editor.selectRight(selectedNodeName.length);
+				// If we have a selectedLine, then figure the name of the node and what to highlight!
+				if(selectedLine!=0) {
+					var selectedNodeName = selection.map((e) => e.nodeName)[0];
+					var selectedColumn = selection.map((e) => e.column)[0];
+
+					editor.moveToTop();
+					editor.moveDown(selectedLine-1);
+					editor.moveRight(selectedColumn);
+					editor.selectRight(selectedNodeName.length);
+				}
 			}
 		}
 	});
 }
 
+/**
+ * Register a command so we can go to an element in the build.xml
+ */
 nova.commands.register("antsidebar.view", () => {
 	var selection = treeView.selection;
 	var type = selection.map((e) => e.type)[0];
@@ -115,6 +136,9 @@ nova.commands.register("antsidebar.view", () => {
 	exports.openBuildAndGoTo();
 });
 
+/**
+ * Register a command so we can run one of the targets in the build.xml
+ */
 nova.commands.register("antsidebar.run", () => {
 	var selection = treeView.selection;
 	let buildTarget = selection.map((e) => e.name)[0];
@@ -122,8 +146,14 @@ nova.commands.register("antsidebar.run", () => {
 	exports.runTarget(buildTarget);
 });
 
+/**
+ * Used to actually call Ant to run a build target
+ * @param {String} targetName - The name of the target node to run!
+ */
 exports.runTarget = function(targetName) {
 	var noticePromise;
+
+	// Show a notification that the build is starting
 	var notice = new NotificationRequest("ant-build-start");
 	notice.title = "Ant Build Started";
 	notice.boty = "Starting to launch build target " + targetName;
@@ -145,10 +175,6 @@ exports.runTarget = function(targetName) {
 	var process = new Process("/usr/bin/env",options)
 	var stdOut = [];
 	var stdErr = [];
-	if(nova.inDevMode()) {
-		console.log("Options: ");
-		consoleLogObject(options);
-	}
 
 	/** @TODO Maybe change to a Task like process that will give a transcription */
 	process.onStdout(function(line) {
@@ -174,11 +200,13 @@ exports.runTarget = function(targetName) {
 	});
 
 	process.start();
-	if(nova.inDevMode()) {
-		//console.log("Ant runTarget done");
-	}
 }
 
+/**
+ * A Class for the items that get displayed in the treeview for the Ant view.
+ * In addition to the normal elements like `children` and `parent`, we need to track a bunch of stuff,
+ * like the line and column so we can jump to it, also which `type` of icon to show
+ */
 class AntItem {
 	constructor(name, type, nodeName, line = 0, column = 0) {
 		this.name = name;
@@ -197,105 +225,137 @@ class AntItem {
 }
 
 /**
- * Creates the Sidebar tree
+ * Used to create the Ant Sidebar tree
  */
 class AntDataProvider {
+	/**
+	 * Used to generate the treeview of the Ant Sidebar
+	 *
+	 * @param {JSON} buildJson - The build.xml parsed into JSON
+	 */
 	constructor(buildJson) {
+		// Figure out the name of the project to show!
 		let projectName = buildJson.getNodeAttributesByName("project")[0]["name"];
-		let items = buildJson.findNodesByName("target");
+		// Get's all the build.xml's <target/>!
+		let targets = buildJson.findNodesByName("target");
+		// Get the position of the project node (used for jumping to an editor view)
 		let position = buildJson.getNodePositionsByName("project")[0];
 
 		// Items that are part of the Ant Build
 		let antItems = [];
 
-		// Have a holder for the build name
+		// Start with a holder for the name and title of the build.xml
 		let holder = new AntItem(projectName,"ant","project",position.line,position.column);
 		antItems.push(holder);
 
-		// Add to the holder each build
-		items.forEach((a) => {
+		// Add to the holder each target node.
+		targets.forEach((a) => {
+			// If the target has a name, we can proceed with getting elements.
 			if(a["@"].name!==undefined) {
+				// Let's create a new element to add to the treeview!
 				let element;
+
+				// Check if it's a target with a description since it get's a different icon in the treeview
 				if(a["@"].description) {
 					element = new AntItem(a["@"].name,"target-with-desc","target",a.line,a.column);
 				} else {
 					element = new AntItem(a["@"].name,"target","target",a.line,a.column);
 				}
+
+				// Now we can add this element to the holder
 				holder.children.push(element);
 
-				let goThroughChildren = (parent, items) => {
-					let childElement, childName, childType;
-					if(items.children) {
-						items.children.forEach((c) => {
-							switch(c.name) {
-								case "available": {
-									if(parent.type=="target") {
-										childName = "file="+c["@"].file
-										childType = "available";
-									} else {
-										childName = c.name;
-										childType = "tag";
-									}
-									break;
-								}
-								case "pathconvert": {
-									childName = c.name;
-									childType = c.name;
-									break;
-								}
-								case "fileset": {
-									if(c["@"].id!==undefined) {
-										childName = c["@"].id
-									} else {
-										childName = c.name;
-									}
-									childType = c.name;
-									break;
-								}
-								case "mkdir":
-								case "delete": {
-									childName = c.name+" "+c["@"].dir;
-									childType = c.name;
-									break;
-								}
-								case "jar": {
-									childName = c.name+" "+c["@"].destfile;
-									childType = c.name;
-									break;
-								}
-								case "unzip": {
-									childName = c.name+" "+c["@"].src;
-									childType = c.name;
-									break;
-								}
-								default: {
-									childName = c.name;
-									childType = c.name;
-									break;
-								}
-							}
-
-							if(childName!="") {
-								childElement = new AntItem(childName, childType, c.name, c.line, c.column);
-								parent.addChild(childElement);
-							}
-
-							if(c.children) {
-								goThroughChildren(childElement,c);
-							}
-						});
-					}
-				}
-
+				// If the target has children, then we need to go through them and add them as AntItems too!
 				if(a.children && a.children.length>0) {
-					goThroughChildren(element, a);
+					this.goThroughChildren(element, a);
 				}
 			}
 		});
 
+		// Set the roo to the array of AntItems we created!
 		this.rootItems = antItems;
 	}
 
+	/**
+	 * Function to go through the children elements and tie them back to the parent!
+	 *
+	 * @param {AntItem} parent - The AntItem that may have children
+	 * @param {JSON} items - The JSON data for the node that is being parsed
+	 */
+	goThroughChildren(parent, items) {
+		let childElement, childName, childType;
+		// If there are children to go through, then you best be doing it!!
+		if(items.children) {
+			// Go through each child and figure out what kind of AntItem it should be!
+			items.children.forEach((c) => {
+				// Based upon the name of the child,
+				switch(c.name) {
+					case "available": {
+						if(parent.type=="target") {
+							childName = "file="+c["@"].file
+							childType = "available";
+						} else {
+							childName = c.name;
+							childType = "tag";
+						}
+						break;
+					}
+					case "pathconvert": {
+						childName = c.name;
+						childType = c.name;
+						break;
+					}
+					case "fileset": {
+						if(c["@"].id!==undefined) {
+							childName = c["@"].id
+						} else {
+							childName = c.name;
+						}
+						childType = c.name;
+						break;
+					}
+					case "mkdir":
+					case "delete": {
+						childName = c.name+" "+c["@"].dir;
+						childType = c.name;
+						break;
+					}
+					case "jar": {
+						childName = c.name+" "+c["@"].destfile;
+						childType = c.name;
+						break;
+					}
+					case "unzip": {
+						childName = c.name+" "+c["@"].src;
+						childType = c.name;
+						break;
+					}
+					default: {
+						childName = c.name;
+						childType = c.name;
+						break;
+					}
+				}
+
+				// If the child name is empty, then do not add an AntItem to the list
+				if(childName!="") {
+					childElement = new AntItem(childName, childType, c.name, c.line, c.column);
+					parent.addChild(childElement);
+				}
+
+				// If this child has children, then we need to go through them too!
+				if(c.children) {
+					this.goThroughChildren(childElement,c);
+				}
+			});
+		}
+	}
+
+	/**
+	 * Finds the children of the element selected
+	 *
+	 * @param {AntItem} element - The children of the item
+	 */
 	getChildren(element) {
 		if(!element) {
 			return this.rootItems;
@@ -304,11 +364,20 @@ class AntDataProvider {
 		}
 	}
 
+	/**
+	 * Requests the parent of an element, for use with the reveal() method
+	 * @param {AntItem} element - The parent of the selected item
+	 */
 	getParent(element) {
-		// Requests the parent of an element, for use with the reveal() method
 		return element.parent;
 	}
 
+	/**
+	 * Nova uses this to help render the treeview (I think). We need to set if is should be collapsible or not.
+	 * As well as the type of `image` to use for icons.
+	 *
+	 * @param {AntItem} element - The item that should be rendered, and what data can be processed from it
+	 */
 	getTreeItem(element) {
 		// Converts an element into its display (TreeItem) representation
 		let item = new TreeItem(element.name);

@@ -9,7 +9,13 @@
  * @author ChatGPT and Christopher Pollati
  */
 exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
-	constructor(xmlString, trackNodeText = false) {
+
+	/**
+	 * Takes a string of text as XML, and converts it into a JSON object
+	 *
+	 * @param {String} xmlString - The XML content that should be parsed
+	 */
+	constructor(xmlString) {
 		this.xmlString = xmlString;
 		this.currentIndex = 0;
 		this.lineNumber = 1;   // Track the current line number
@@ -21,6 +27,9 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		}
 	}
 
+	/**
+	 * Handles taking the XML node and converting it into JSON
+	 */
 	parseNode() {
 		this.skipWhitespace();
 		if (this.currentIndex >= this.xmlString.length) {
@@ -109,11 +118,34 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		}
 	}
 
+	/**
+	 * Used to move where were are in the XML string, accounting that the `currentIndex` and `columnNumber` need to be adjusted
+	 *
+	 * @param {Number} value - How many spaces
+	 */
 	moveCurrentIndex(value) {
 		this.currentIndex += value;
 		this.columnNumber += value;
 	}
 
+	/**
+	 * Move our counters to the next line, so the line gets increased and the column number is reset
+	 */
+	moveToNextLine() {
+		this.lineNumber++;
+		this.columnNumber = 0; // Reset column number at the start of each new line
+	}
+
+	/**
+	 * Gets the current `lineNumber` and `columnNumber`
+	 */
+	getLineColumn() {
+		return `line: ${this.lineNumber}, col: ${this.columnNumber}`;
+	}
+
+	/**
+	 * Move to the next character, checking to see if there is a newline, and adjust accordingly!
+	 */
 	nextCharCountingLine() {
 		if (this.xmlString[this.currentIndex] === '\n') {
 			this.moveToNextLine();
@@ -123,6 +155,9 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		this.currentIndex++;
 	}
 
+	/**
+	 * Checks for the nodes name, otherwise throws an error.
+	 */
 	parseNodeName() {
 		const start = this.currentIndex;
 		while (this.currentIndex < this.xmlString.length && /[a-zA-Z0-9_:.-]/.test(this.xmlString[this.currentIndex])) {
@@ -134,6 +169,9 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		return this.xmlString.substring(start, this.currentIndex);
 	}
 
+	/**
+	 * Checks for the attributes in a node.
+	 */
 	parseAttributes() {
 		const attributes = {};
 		while (this.currentIndex < this.xmlString.length) {
@@ -154,6 +192,9 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		return attributes;
 	}
 
+	/**
+	 * Handles parsing the values of the attribute.
+	 */
 	parseAttributeValue() {
 		const quote = this.xmlString[this.currentIndex];
 		if (quote !== '"' && quote !== "'") {
@@ -172,6 +213,11 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		return value;
 	}
 
+	/**
+	 * Handles going through the children of a node
+	 *
+	 * @param {String} parentNodeName - The parent's node name so we know when to stop parsing the node
+	 */
 	parseChildren(parentNodeName) {
 		const children = [];
 		let textContent = '';
@@ -219,18 +265,52 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		return children;
 	}
 
+	/**
+	 * Handles skipping white space (and making sure we know what line/column we are at!)
+	 */
 	skipWhitespace() {
 		while (this.currentIndex < this.xmlString.length && /\s/.test(this.xmlString[this.currentIndex])) {
 			this.nextCharCountingLine();
 		}
 	}
 
+	/**
+	 * Helps to display an error, that may be helpful for reading. Tries to show the line where the error occurs,
+	 * and adds double brackets at the offending spot.
+	 *
+	 * @param {String} message - The error message
+	 */
+	showErrorContext(message) {
+		const start = Math.max(0, this.currentIndex - 20);
+		const end = Math.min(this.xmlString.length, this.currentIndex + 20);
+		const before = this.xmlString.substring(start, this.currentIndex).replace(/\n/g, ' ');
+		const after = this.xmlString.substring(this.currentIndex+1, end).replace(/\n/g, ' ');
+		const pointer = '[[' + this.xmlString[this.currentIndex] + ']]';
+
+		console.error(`Error: ${message}`);
+		console.error(`${before}${pointer}${after}`);
+
+		/** @NOTE This cause Nova to stop parsing, which is usually fine in the case of debugging an extension */
+		throw new Error(message);
+	}
+
+	/* ---- Helpers ---- */
+
+	/**
+	 * Helper to find a particular node by it's name
+	 * @param {String} nodeName - The name of the node you are looking for
+	 */
 	findNodesByName(nodeName) {
 		const result = [];
 		this.searchNodes(this.jsonArray, nodeName, result);
 		return result;
 	}
 
+	/**
+	 * Returnsa all the attributes for a specific node.
+	 *
+	 * @param {String} nodeName - The node to get attributes of
+	 */
 	getNodeAttributesByName(nodeName) {
 		const nodes = this.findNodesByName(nodeName);
 		if (nodes.length > 0) {
@@ -239,7 +319,12 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		return [];
 	}
 
-	getNodePositionsByName(nodeName) {
+	/**
+	 * Just return the line and column for a particular node by name
+	 *
+	 * @param {String} nodeName - The name of the node to find
+	 */
+	 getNodePositionsByName(nodeName) {
 		const nodes = this.findNodesByName(nodeName);
 		if (nodes.length > 0) {
 			return nodes.map(node => ({
@@ -250,6 +335,12 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		return [];
 	}
 
+	/**
+	 * Get a particular children of a particular node
+	 *
+	 * @param {String} nodeName - The name of the node to find
+	 * @param {String} childName - The name of the children to find
+	 */
 	getNodeChildrenByName(nodeName, childName) {
 		const nodes = this.findNodesByName(nodeName);
 		if (nodes.length === 1) {
@@ -266,6 +357,13 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		return children.length === 1 ? children[0] : children;
 	}
 
+	/**
+	 * Searches the JSON for particular nodes
+	 *
+	 * @param {JSON} nodes - The JSON array of nodes to search through
+	 * @param {String} nodeName - The name of the nodes you are looking for
+	 * @param {Object} result - Where to store the results of the search.
+	 */
 	searchNodes(nodes, nodeName, result) {
 		for (let node of nodes) {
 			if (node.name === nodeName) {
@@ -277,28 +375,8 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		}
 	}
 
-	getJSONArray() {
-		return this.jsonArray;
-	}
-
-	showErrorContext(message) {
-		const start = Math.max(0, this.currentIndex - 20);
-		const end = Math.min(this.xmlString.length, this.currentIndex + 20);
-		const before = this.xmlString.substring(start, this.currentIndex).replace(/\n/g, ' ');
-		const after = this.xmlString.substring(this.currentIndex+1, end).replace(/\n/g, ' ');
-		const pointer = '[[' + this.xmlString[this.currentIndex] + ']]';
-
-		console.error(`Error: ${message}`);
-		console.error(`${before}${pointer}${after}`);
-		throw new Error(message);
-	}
-
-	moveToNextLine() {
-		this.lineNumber++;
-		this.columnNumber = 0; // Reset column number at the start of each new line
-	}
-
-	getLineColumn() {
-		return `line: ${this.lineNumber}, col: ${this.columnNumber}`;
-	}
+	/**
+	 * Method to get the JSON array
+	 */
+	getJSONArray() { return this.jsonArray; }
 };
