@@ -291,12 +291,22 @@ class AntDataProvider {
 				// Based upon the name of the child,
 				switch(c.name) {
 					case "available": {
-						if(parent.type=="target") {
-							childName = "file="+c["@"].file
+						if(parent.type=="target" && c["@"].file!==undefined) {
+							childName = "file="+c["@"].file;
 							childType = "available";
 						} else {
 							childName = c.name;
 							childType = "tag";
+						}
+						break;
+					}
+					case "property": {
+						if(parent.type=="target" && c["@"].name!==undefined) {
+							childName = c["@"].name;
+							childType = "property";
+						} else {
+							childName = c.name;
+							childType = "property";
 						}
 						break;
 					}
@@ -406,6 +416,9 @@ class AntDataProvider {
 			break;
 			case "pathconvert":
 				item.image = "__symbol.tag-image";
+			break;
+			case "macrodef":
+				item.image = "__filetype.java";
 			break;
 			case "flleset":
 				item.image = "__symbol.block";

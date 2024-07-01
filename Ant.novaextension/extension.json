@@ -8,6 +8,12 @@
 
 	"main": "main.js",
 
+	"homepage": "https://github.com/AmigaAbattoir/nova-ant",
+	"repository": "https://github.com/AmigaAbattoir/nova-ant",
+	"bugs": {
+		"url": "https://github.com/AmigaAbattoir/nova-ant/issues"
+	},
+
 	"activationEvents": [
 		"onWorkspaceContains:build.xml"
 	],
@@ -46,13 +52,14 @@
 							"image": "__builtin.next",
 							"tooltip": "Run a single, selected Ant target.",
 							"command": "antsidebar.run",
-							"when": "viewItem.length != 1"
+							"when": "viewItem==='target-with-desc' || viewItem==='target'"
 						},
 						{
 							"title": "Show in Build XML",
 							"image": "__builtin.path",
 							"tooltip": "Jump to line in the Ant Build.XML file ",
 							"command": "antsidebar.view",
+							"when": "viewItem != null"
 						}
 					],
 					"contextCommands": [
