@@ -42,6 +42,12 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 
 		this.moveCurrentIndex(1); // Skip '<'
 
+ 	   // Handle XML declaration <?xml ... ?>
+		if (this.xmlString.substr(this.currentIndex, 4) === '?xml') {
+			this.skipDeclaration();
+			return this.parseNode(); // Recursively call parseNode after skipping the declaration
+		}
+
 		if (this.xmlString[this.currentIndex] === '!') {
 			this.skipComment();
 			return this.parseNode(); // Recursively call parseNode after skipping the comment
@@ -94,6 +100,32 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		};
 	}
 
+	/**
+	 * Helps to skip an XML declaration
+	 */
+	skipDeclaration() {
+		if (this.xmlString.substr(this.currentIndex, 4) !== '?xml') {
+			this.showErrorContext("Expected '?xml' for declaration at position " + this.getLineColumn());
+		}
+		this.moveCurrentIndex(4); // Skip '?xml'
+
+		while (this.currentIndex < this.xmlString.length - 2) {
+			if (this.xmlString.substr(this.currentIndex, 2) === '?>') {
+				this.moveCurrentIndex(2); // Skip '?>'
+				break;
+			} else {
+				this.nextCharCountingLine();
+			}
+		}
+
+		if (this.currentIndex >= this.xmlString.length) {
+			this.showErrorContext("Unterminated XML declaration starting at position " + this.getLineColumn());
+		}
+	}
+
+	/**
+	 * Used to skip comments, should handled nested comments too!
+	 */
 	skipComment() {
 		if (this.xmlString.substr(this.currentIndex, 3) !== "!--") {
 			this.showErrorContext("Expected '!--' for comment at position " + this.getLineColumn());
