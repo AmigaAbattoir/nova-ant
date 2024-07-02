@@ -1,3 +1,7 @@
+## Version 0.5
+
+* Added configuration options
+
 ## Version 0.4
 
 * Changed NS3X2J to handle parsing unmodified XML string.

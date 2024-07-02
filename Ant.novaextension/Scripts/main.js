@@ -1,12 +1,16 @@
 const xmlToJson = require('./not-so-simple-simple-xml-to-json.js');
 const { showNotification, consoleLogObject } = require("./nova-utils.js");
+const { getWorkspaceOrGlobalConfig } = require("./config-utils.js");
 
 var treeView = null;
 var previousBuildXmlData = "";
 
-// Should be configurable? But Build should always be at the root of the project, right?
-var buildXmlPath = nova.workspace.path;
-var buildXmlFileName = "build.xml";
+const DEFAULT_ANT_EXE = nova.path.join(nova.path.join(nova.extension.path, "apache-ant-1.10.14"),"bin") + "/ant";
+const DEFAULT_PATH = nova.workspace.path;
+const DEFAULT_BUILD_FILE = "build.xml;"
+const DEFAULT_BUILD_AND_PATH = nova.path.join(DEFAULT_PATH, DEFAULT_BUILD_FILE);
+
+var antBuildXmlFileAndPath = DEFAULT_BUILD_AND_PATH;
 
 /**
  * Opens a file and dumps it into a string.
@@ -18,7 +22,7 @@ function getStringOfWorkspaceFile(filename, trimAll = true) {
 	try {
 		contents = "";
 		//console.log("Trying to open: " + nova.path.join(nova.workspace.path, filename));
-		var file = nova.fs.open(nova.path.join(nova.workspace.path, filename));
+		var file = nova.fs.open(filename);
 		if(file) {
 			do {
 				line = file.readline();
@@ -35,7 +39,7 @@ function getStringOfWorkspaceFile(filename, trimAll = true) {
 			contents = contents.replace((/  |\r\n|\n|\r/gm),"");  // contents.replace(/(\r\n|\n|\r)/gm,"")
 		}
 	} catch(error) {
-		console.log("*** ERROR: Could not open file " + nova.path.join(nova.workspace.path, filename) + " for reading. ***");
+		console.log("*** ERROR: Could not open file " + filename + " for reading. ***");
 		return null;
 	}
 	return contents;
@@ -46,13 +50,24 @@ function getStringOfWorkspaceFile(filename, trimAll = true) {
  * we then update the view
  */
 exports.activate = function() {
-	// Do work when the extension is activated
-	exports.loadAndParseBuildXML(buildXmlFileName);
+	exports.doSidebar();
+}
 
-	// Watch the build file. If it changes, then reload it.
-	nova.fs.watch(nova.path.join(buildXmlPath, buildXmlFileName), () => {
-		exports.loadAndParseBuildXML(buildXmlFileName);
-	});
+exports.doSidebar = function() {
+	exports.figureBuildFile();
+	exports.loadAndParseBuildXML();
+
+	// Setup a watch if the file gets saved to re-parse the file
+	nova.fs.watch(antBuildXmlFileAndPath, () => { exports.doSidebar(); });
+	// If the extension's build file changes, then we need to change stuff.
+	nova.config.onDidChange("ant.build.file", () => { exports.doSidebar(); });
+	// If the workspace's build file changes, then we need to change stuff too!!
+	nova.workspace.config.onDidChange("ant.build.file", () => { exports.doSidebar(); });
+}
+
+exports.figureBuildFile = function () {
+	var antBuildXmlFileName = getWorkspaceOrGlobalConfig("ant.build.file") ?? "build.xml";
+	antBuildXmlFileAndPath = nova.path.join(nova.workspace.path, antBuildXmlFileName);
 }
 
 /**
@@ -62,11 +77,15 @@ exports.activate = function() {
  */
 exports.loadAndParseBuildXML = function(filename) {
 	// If there's a build.xml, parse it
-	var buildXmlString = getStringOfWorkspaceFile("build.xml",false);
+	var buildXmlString = getStringOfWorkspaceFile(antBuildXmlFileAndPath,false);
 
 	// If not a valid or empty XML, clear the window
 	if(buildXmlString==null || buildXmlString=="") {
-		showNotification("Unable to use empty build.xml");
+		if(buildXmlString==null) {
+			showNotification("Error loading Build file","Cannot open file at " + antBuildXmlFileAndPath + " for reading");
+		} else if(buildXmlString=="") {
+			showNotification("Unable to use empty build.xml");
+		}
 		treeView = new TreeView("antsidebar", {
 			dataProvider: null
 		});
@@ -103,7 +122,7 @@ exports.deactivate = function() {
  * Used to open the build.xml. If something is selected in the treeview, then we will jump to that specific location
  */
 exports.openBuildAndGoTo = function() {
-	nova.workspace.openFile(nova.path.join(buildXmlPath, buildXmlFileName)).then((textDocument) => {
+	nova.workspace.openFile(antBuildXmlFileAndPath).then((textDocument) => {
 		var editor = nova.workspace.activeTextEditor;
 
 		if (editor) {
@@ -160,16 +179,25 @@ exports.runTarget = function(targetName) {
 	notice.actions = [ "Okay" ];
 	noticePromise = nova.notifications.add(notice);
 
-	// @TODO Should use preferences to Ant executable
-	var path = nova.path.join(nova.path.join(nova.extension.path, "apache-ant-1.10.14"),"bin") + "/ant";
-	var args = new Array;
+	// Get the configuration for the Ant path, or use the default included Ant binaries
+	var antExe = getWorkspaceOrGlobalConfig("ant.ant.path") ?? DEFAULT_ANT_EXE;
 
-	args.push(path);
+	var args = new Array;
+	args.push(antExe);
+
+	var antBuildXmlFileName = getWorkspaceOrGlobalConfig("ant.build.file") ?? DEFAULT_BUILD_FILE;
+
+	// Need to add an argument if the build file is named somethign other than build.xml
+	if(antBuildXmlFileName!="build.xml") {
+		args.push("-buildfile");
+		args.push(antBuildXmlFileName);
+	}
+
 	args.push(targetName);
 
 	var options = {
 		args: args,
-		cwd: buildXmlPath
+		cwd: DEFAULT_PATH
 	};
 
 	var process = new Process("/usr/bin/env",options)
@@ -272,7 +300,7 @@ class AntDataProvider {
 			}
 		});
 
-		// Set the roo to the array of AntItems we created!
+		// Set the root to the array of AntItems we created!
 		this.rootItems = antItems;
 	}
 
@@ -378,9 +406,7 @@ class AntDataProvider {
 	 * Requests the parent of an element, for use with the reveal() method
 	 * @param {AntItem} element - The parent of the selected item
 	 */
-	getParent(element) {
-		return element.parent;
-	}
+	getParent(element) { return element.parent; }
 
 	/**
 	 * Nova uses this to help render the treeview (I think). We need to set if is should be collapsible or not.

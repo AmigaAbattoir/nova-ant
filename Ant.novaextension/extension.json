@@ -3,7 +3,7 @@
 	"name": "Ant",
 	"organization": "Abattoir Software",
 	"description": "Extension for Nova's Panic, to use Apache Ant",
-	"version": "0.4",
+	"version": "0.5",
 	"categories": ["sidebars"],
 
 	"main": "main.js",
@@ -24,11 +24,34 @@
 		"requests": true
 	},
 
-	"comments": [
-		"@TODO....",
-		"Preferences",
-		"Location of java",
-		"Location of custom ant",
+	"config": [
+		{
+			"key": "ant.ant.path",
+			"title": "Ant Path",
+			"type": "path",
+			"placeholder": "Use included Ant 1.10.14 package",
+			"description": "If you want to use a different version of Ant, then specifiy the location of the ant executable. (ie: apache-ant-1.10.14/bin)"
+		},
+	],
+
+	"configWorkspace": [
+		{
+			"key": "ant.ant.path",
+			"title": "Ant Path",
+			"type": "path",
+			"placeholder": "Use included Ant 1.10.14 package",
+			"description": "If you want to use a different version of Ant, then specifiy the location of the ant executable. (ie: apache-ant-1.10.14/bin)"
+		},
+		{
+			"key": "ant.build.file",
+			"title": "Ant Build File",
+			"type": "path",
+			"relative": true,
+			"allowFolders": false,
+			"allowFiles": true,
+			"placeholder": "build.xml",
+			"description": "The name of the build file to use. Default is build.xml"
+		},
 	],
 
 	"sidebars": [
@@ -44,7 +67,7 @@
 					"id": "antsidebar",
 					"name": "ANT Build Targets",
 					"allowMultiple": false,
-					"placeholderText": "Could not find an Ant 'build.xml' in your workspace.",
+					"placeholderText": "Could not find an Apache Ant 'build.xml' in your workspace.\nYou can also change the location of it in the extension settings.",
 					"placeholderImage": "placeholder",
 					"headerCommands": [
 						{
