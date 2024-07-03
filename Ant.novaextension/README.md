@@ -4,8 +4,6 @@ Included in the extensions is Apache Ant 1.10.14.
 
 ![](images/ant-screenshot.png)
 
-Icons taken from Eclipse Ant.
-
 ## Requirements
 
 Ant requires some additional tools to be installed on your Mac:

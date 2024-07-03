@@ -432,7 +432,7 @@ class AntDataProvider {
 				item.image = "target";
 			break;
 			case "target-with-desc":
-				item.image = "target-light";
+				item.image = "target-desc";
 			break;
 			case "ant":
 				item.image = "ant";
