@@ -1,3 +1,7 @@
+## Version 0.7
+
+* Added notices about Apache Ant
+
 ## Version 0.6
 
 * Changed NS3X2J to optionally store position of node

@@ -6,7 +6,7 @@ Included in the extensions is Apache Ant 1.10.14.
 
 ## Requirements
 
-Ant requires some additional tools to be installed on your Mac:
+Apache Ant requires some additional tools to be installed on your Mac:
 
 - Java 8 or newer
 
@@ -31,6 +31,12 @@ You can also configure preferences on a per-project basis in **Project → Proje
 
 The default it to look for a `build.xml` in the root of your Nova project.
 
-## Notes
+## License
 
-I made this extension to help my build some older projects. Many of them use simple XMLs for building and do not use any additional Ant libs, so your mileage will vary.
+This project bundles [Apache Ant](http://ant.apache.org/), which is licensed under the Apache License 2.0. The full text of the Apache License 2.0 is available in the [apache-ant-1.10.14/LICENSE](apache-ant-1.10.14/LICENSE) file.
+
+'Apache', 'Apache Software Foundation', the multicoloured feather, and the various Apache project names and logos are either registered trademarks or trademarks of The Apache Software Foundation in the United States and other countries.
+
+## Notices
+
+Notices for the Apache Ant project can be found in the [apache-ant-1.10.14/NOTICE](apache-ant-1.10.14/NOTICE) file.
