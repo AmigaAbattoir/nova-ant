@@ -1,6 +1,5 @@
 const xmlToJson = require('./not-so-simple-simple-xml-to-json.js');
-const { showNotification, consoleLogObject } = require("./nova-utils.js");
-const { getWorkspaceOrGlobalConfig } = require("./config-utils.js");
+const { showNotification, consoleLogObject, isWorkspace, getWorkspaceOrGlobalConfig } = require("./nova-utils.js");
 
 var treeView = null;
 var previousBuildXmlData = "";
@@ -93,7 +92,7 @@ exports.loadAndParseBuildXML = function(filename) {
 	}
 
 	// Parse the XML to JSON.
-	var buildJson = new xmlToJson.ns3x2j(buildXmlString);
+	var buildJson = new xmlToJson.ns3x2j(buildXmlString,true);
 
 	// Check if the data really changed, if not just leave our tree alone!
 	if(buildJson.xmlString==previousBuildXmlData) {

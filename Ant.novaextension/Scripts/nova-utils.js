@@ -1,4 +1,12 @@
 /**
+ * nova-utils.js
+ *
+ * Some commonly used functions I use in Panic Nova extensions
+ *
+ * @author Christopher Pollati
+ */
+
+/**
  * Quick, easy way to show a notification. If you need it to persist, then add a button
  * to show. This does not resolve any buttons, just there to keep in place!
  * @param {string} title - The title of the notification
@@ -81,16 +89,49 @@ exports.isWorkspace = function() {
 	}
 }
 
+/**
+ * Gets a Config value. If you are in a workspace, it will also look if there is a workspace config with that name that should override it.
+ *
+ * @param {String} configName - The name of the configuration
+ */
+exports.getWorkspaceOrGlobalConfig = function(configName) {
+	var config = nova.config.get(configName);
+	//console.log("*** getWorkspaceOrGlobalConfig() Config " + configName + " is [" + config + "]");
+	if(exports.isWorkspace()) {
+		workspaceConfig = nova.workspace.config.get(configName)
+	//console.log("*** getWorkspaceOrGlobalConfig() Workspace Config " + configName + " is [" + workspaceConfig + "]");
+		if(workspaceConfig) {
+			config = workspaceConfig;
+		}
+	}
+	//console.log("*** getWorkspaceOrGlobalConfig() RETURNING [" + config + "]");
+	return config;
+}
+
+/**
+ * Save all open text editors
+ */
 exports.saveAllFiles = function() {
 	nova.workspace.textEditors.forEach((editor)=> {
 		editor.save();
 	});
 }
 
+/**
+ * Help to console log objects
+ *
+ * @param {Object} object - The Object to try and log to console
+ */
 exports.consoleLogObject = function(object) {
 	console.log(JSON.stringify((object!=null ? object : " null"),null,4));
 }
 
+/**
+ * Converts a Panic Nova range to something some LSP would understand
+ *
+ * @param {Document} document - The document that is to be examined
+ * @param {Object} range - An object containing a start and end
+ */
 exports.rangeToLspRange = function(document, range) {
 	const fullContents = document.getTextInRange(new Range(0, document.length));
 
@@ -116,5 +157,3 @@ exports.rangeToLspRange = function(document, range) {
 	}
 	return null;
 };
-
-

@@ -15,8 +15,9 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 	 *
 	 * @param {String} xmlString - The XML content that should be parsed
 	 */
-	constructor(xmlString) {
+	constructor(xmlString, trackPosition = false) {
 		this.xmlString = xmlString;
+		this.trackPosition = trackPosition;
 		this.currentIndex = 0;
 		this.lineNumber = 1;   // Track the current line number
 		this.columnNumber = 0; // Track the current column number
@@ -25,6 +26,19 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		if (rootNode) {
 			this.jsonArray.push(rootNode);
 		}
+	}
+
+	generateNode(nodeName, attributes, children, textContent, line, column) {
+		return {
+			name: nodeName,
+			"@": attributes,
+			children: children,
+			textContent: textContent,
+			...(this.trackPosition && {
+				line: line,
+				column: column
+			})
+		};
 	}
 
 	/**
@@ -78,26 +92,12 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 			}
 		} else if (this.xmlString[this.currentIndex] === '/' && this.xmlString[this.currentIndex + 1] === '>') {
 			this.moveCurrentIndex(2); // Skip '/>'
-			return {
-				name: nodeName,
-				"@": attributes,
-				children: [],
-				textContent: null,
-				line: lineStart,
-				column: colStart
-			};
+			return this.generateNode(nodeName, attributes, [], null, lineStart, colStart);
 		} else {
 			this.showErrorContext("Unexpected character at position " + this.getLineColumn());
 		}
 
-		return {
-			name: nodeName,
-			"@": attributes,
-			children: children,
-			textContent: textContent,
-			line: lineStart,
-			column: colStart
-		};
+		return this.generateNode(nodeName, attributes, children, textContent, lineStart, colStart);
 	}
 
 	/**
@@ -270,14 +270,10 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 					}
 					this.currentIndex++; // Skip '>'
 					if (textContent.trim().length > 0) {
-						children.push({
-							name: "#text",
-							"@": {},
-							children: [],
-							textContent: textContent, // Don't trim text content!
-							line: lineStart,
-							column: this.columnNumber,
-						});
+						// Don't trim text content!
+						children.push(
+							this.generateNode("#text", {}, [], textContent, lineStart, this.columnNumber)
+						);
 					}
 					break;
 				} else if (this.xmlString.substr(this.currentIndex, 4) === "<!--") {

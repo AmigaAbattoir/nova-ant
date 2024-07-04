@@ -1,3 +1,9 @@
+## Version 0.6
+
+* Changed NS3X2J to optionally store position of node
+* Change other scripts around
+* Created new icons
+
 ## Version 0.5
 
 * Added configuration options
