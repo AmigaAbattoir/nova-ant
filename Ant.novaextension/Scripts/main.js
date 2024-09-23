@@ -14,7 +14,8 @@ var antBuildXmlFileAndPath = DEFAULT_BUILD_AND_PATH;
 /**
  * Opens a file and dumps it into a string.
  * @param {string} filename - The name of the file to open, relative to the workspace
- * @param {boolean} trimAll - Default: true. Trims each line, and removes extra spacing (useful for pjxml and our XML files!)
+ * @param {boolean} trimAll - Default: true. Trims each line, and removes extra spacing
+ * @returns {String|null} - The contents of the text file or null if not able to open
  */
 function getStringOfWorkspaceFile(filename, trimAll = true) {
 	var line, contents;
@@ -52,6 +53,9 @@ exports.activate = function() {
 	exports.doSidebar();
 }
 
+/**
+ * Function that does all the work for the sidebar.
+ */
 exports.doSidebar = function() {
 	exports.figureBuildFile();
 	exports.loadAndParseBuildXML();
@@ -64,6 +68,9 @@ exports.doSidebar = function() {
 	nova.workspace.config.onDidChange("ant.build.file", () => { exports.doSidebar(); });
 }
 
+/**
+ * Checks to get the name of the build file to use
+ */
 exports.figureBuildFile = function () {
 	var antBuildXmlFileName = getWorkspaceOrGlobalConfig("ant.build.file") ?? "build.xml";
 	antBuildXmlFileAndPath = nova.path.join(nova.workspace.path, antBuildXmlFileName);
@@ -72,7 +79,7 @@ exports.figureBuildFile = function () {
 /**
  * Loads and parses the build.xml file and creates the treeview as needed.
  *
- * @param {String} filename - The name of the workspace file to get
+ * @param {string} filename - The name of the workspace file to get
  */
 exports.loadAndParseBuildXML = function(filename) {
 	// If there's a build.xml, parse it
@@ -166,7 +173,7 @@ nova.commands.register("antsidebar.run", () => {
 
 /**
  * Used to actually call Ant to run a build target
- * @param {String} targetName - The name of the target node to run!
+ * @param {string} targetName - The name of the target node to run!
  */
 exports.runTarget = function(targetName) {
 	var noticePromise;
@@ -258,7 +265,7 @@ class AntDataProvider {
 	/**
 	 * Used to generate the treeview of the Ant Sidebar
 	 *
-	 * @param {JSON} buildJson - The build.xml parsed into JSON
+	 * @param {Object} buildJson - A JSON Obect of the build.xml
 	 */
 	constructor(buildJson) {
 		// Figure out the name of the project to show!
@@ -307,7 +314,7 @@ class AntDataProvider {
 	 * Function to go through the children elements and tie them back to the parent!
 	 *
 	 * @param {AntItem} parent - The AntItem that may have children
-	 * @param {JSON} items - The JSON data for the node that is being parsed
+	 * @param {Object} items - The JSON data for the node that is being parsed
 	 */
 	goThroughChildren(parent, items) {
 		let childElement, childName, childType;

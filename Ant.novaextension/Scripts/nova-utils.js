@@ -92,7 +92,7 @@ exports.isWorkspace = function() {
 /**
  * Gets a Config value. If you are in a workspace, it will also look if there is a workspace config with that name that should override it.
  *
- * @param {String} configName - The name of the configuration
+ * @param {string} configName - The name of the configuration
  */
 exports.getWorkspaceOrGlobalConfig = function(configName) {
 	var config = nova.config.get(configName);
