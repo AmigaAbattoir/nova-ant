@@ -31,7 +31,7 @@
 			"type": "path",
 			"placeholder": "Use included Ant 1.10.14 package",
 			"description": "If you want to use a different version of Ant, then specifiy the location of the ant executable. (ie: apache-ant-1.10.14/bin)"
-		},
+		}
 	],
 
 	"configWorkspace": [
@@ -51,7 +51,7 @@
 			"allowFiles": true,
 			"placeholder": "build.xml",
 			"description": "The name of the build file to use. Default is build.xml"
-		},
+		}
 	],
 
 	"sidebars": [
