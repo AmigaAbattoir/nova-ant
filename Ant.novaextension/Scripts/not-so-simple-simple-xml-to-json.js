@@ -79,6 +79,31 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 			return this.parseNode(); // Recursively call parseNode after skipping the declaration
 		}
 
+		if (this.xmlString.substr(this.currentIndex, 8) === "![CDATA[") {
+			this.moveCurrentIndex(9); // Skip "<![CDATA["
+			const start = this.currentIndex;
+
+			while (this.currentIndex < this.xmlString.length && this.xmlString.substr(this.currentIndex, 3) !== "]]>") {
+				this.nextCharCountingLine();
+			}
+
+			if (this.currentIndex >= this.xmlString.length) {
+				this.showErrorContext("Unterminated CDATA section at position " + this.getLineColumn());
+			}
+
+			const cdataContent = this.xmlString.substring(start, this.currentIndex);
+			this.moveCurrentIndex(3); // Skip "]]>"
+
+			return {
+				name: "#cdata",
+				"@": {},
+				children: [],
+				textContent: cdataContent,
+				line: this.lineNumber,
+				column: this.columnNumber
+			};
+		}
+
 		if (this.xmlString[this.currentIndex] === '!') {
 			this.skipComment();
 			return this.parseNode(); // Recursively call parseNode after skipping the comment
@@ -277,7 +302,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 		let textContent = '';
 
 		while (this.currentIndex < this.xmlString.length) {
-			this.skipWhitespace();
+			//this.skipWhitespace();
 			if (this.xmlString[this.currentIndex] === '<') {
 				var lineStart = this.lineNumber;
 				if (this.xmlString[this.currentIndex + 1] === '/') {
@@ -397,7 +422,7 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 	 * @param {string} nodeName - The name of the node to find
 	 * @returns {Array} - Returns an array with a line and column where that node appear.
 	 */
-	 getNodePositionsByName(nodeName) {
+	getNodePositionsByName(nodeName) {
 		const nodes = this.findNodesByName(nodeName);
 		if (nodes.length > 0) {
 			return nodes.map(node => ({
@@ -434,11 +459,14 @@ exports.ns3x2j = class NotSoSimpleSimpleXMLtoJSON {
 	 * @returns {Object|Array|null} - The matching node, an array of matching nodes, or null if no match is found.
 	 */
 	findChildNodeByName(children, childName) {
-		const matchingChildren = children.filter(child => child.name === childName);
-		if (matchingChildren.length === 0) {
-			return null;
+		if(children!=null) {
+			const matchingChildren = children.filter(child => child.name === childName);
+			if (matchingChildren.length === 0) {
+				return null;
+			}
+			return matchingChildren.length === 1 ? matchingChildren[0] : matchingChildren;
 		}
-		return matchingChildren.length === 1 ? matchingChildren[0] : matchingChildren;
+		return null;
 	}
 
 	/**
