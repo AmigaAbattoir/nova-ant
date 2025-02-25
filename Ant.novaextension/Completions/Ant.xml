@@ -1,0 +1,452 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Grabbed from https://ant.apache.org/manual/index.html -->
+<completions>
+	<provider name="ant">
+		<syntax>xml</syntax>
+		<selector>xml.ant</selector>
+		<set>xml.ant.core</set>
+		<set>xml.ant.project</set>
+		<set>xml.ant.selectors</set>
+		<set>xml.ant.proptery</set>
+		<set>xml.ant.tasks.archive</set>
+		<set>xml.ant.tasks.coverage</set>
+		<set>xml.ant.tasks.compile</set>
+		<set>xml.ant.tasks.deployment</set>
+		<set>xml.ant.tasks.docs</set>
+		<set>xml.ant.tasks.execution</set>
+		<set>xml.ant.tasks.file</set>
+		<set>xml.ant.tasks.java</set>
+		<set>xml.ant.tasks.logging</set>
+		<set>xml.ant.tasks.mail</set>
+		<set>xml.ant.tasks.misc</set>
+		<set>xml.ant.tasks.preprocess</set>
+		<set>xml.ant.tasks.property</set>
+		<set>xml.ant.tasks.remote</set>
+		<set>xml.ant.tasks.scm</set>
+		<set>xml.ant.tasks.testing</set>
+	</provider>
+
+	<set name="xml.ant.core" symbol="tag">
+		<!-- PROJECT -->
+		<completion string="project">
+			<behavior variables="true">
+				<append> name="$[name]" default="$[main]" basedir="$[.]"&gt;
+&lt;/${completion}&gt;</append>
+			</behavior>
+			<description>🐜 The main `project` tag</description>
+		</completion>
+
+		<!--
+			TARGET
+		-->
+		<!-- Target minimum, with name -->
+		<completion string="target">
+			<behavior variables="true">
+				<append> name="$[name]"&gt;
+&lt;/${completion}&gt;</append>
+			</behavior>
+			<description>🐜 </description>
+		</completion>
+
+		<!-- With description Target -->
+		<completion string="target">
+			<behavior variables="true">
+				<append> name="$[name]" description="$[description]"&gt;
+&lt;/${completion}&gt;</append>
+				<description>🐜 </description>
+			</behavior>
+		</completion>
+
+		<!-- Target complete  -->
+		<completion string="target">
+			<behavior variables="true">
+				<append> name="$[name]" depends="$[depends]" if="$[if]" unless="$[unless]" description="$[description]" extensionOf="$[extension of]" onMissingExtensionPoint="$[on missing extension point]"&gt;
+&lt;/${completion}&gt;</append>
+				<description>🐜 </description>
+			</behavior>
+		</completion>
+	</set>
+
+	<set name="xml.ant.project" symbol="tag">
+		<!-- Default to just be and open/closed tag -->
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="path">
+			<description>🐜 </description>
+		</completion>
+
+		<!-- SELECTOR -->
+		<completion string="selector">
+			<behavior variables="true">
+				<append> id="$[id]"&gt;
+&lt;/${completion}&gt;</append>
+				<description>🐜 The `selector` tag</description>
+			</behavior>
+		</completion>
+
+		<completion string="taskdef">
+			<description>🐜 </description>
+		</completion>
+	</set>
+
+	<!-- Dig through https://ant.apache.org/manual/Types/selectors.html to figure out what to add for options -->
+	<set name="xml.ant.selectors">
+		<!-- Default to just be and open/closed tag -->
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="contains">
+			<description>🐜 </description>
+		</completion>
+		<completion string="date">
+			<description>🐜 </description>
+		</completion>
+		<completion string="depend">
+			<description>🐜 </description>
+		</completion>
+		<completion string="depth">
+			<description>🐜 </description>
+		</completion>
+		<completion string="difference">
+			<description>🐜 </description>
+		</completion>
+		<completion string="filename">
+			<description>🐜 </description>
+		</completion>
+		<completion string="present">
+			<description>🐜 </description>
+		</completion>
+		<completion string="containstegexp">
+			<description>🐜 </description>
+		</completion>
+		<completion string="size">
+			<description>🐜 </description>
+		</completion>
+		<completion string="type">
+			<description>🐜 </description>
+		</completion>
+		<completion string="modified">
+			<description>🐜 </description>
+		</completion>
+		<completion string="signedselector">
+			<description>🐜 </description>
+		</completion>
+		<completion string="scriptselector">
+			<description>🐜 </description>
+		</completion>
+		<completion string="readable">
+			<description>🐜 </description>
+		</completion>
+		<completion string="writable">
+			<description>🐜 </description>
+		</completion>
+		<completion string="executable">
+			<description>🐜 </description>
+		</completion>
+		<completion string="ownedby">
+			<description>🐜 </description>
+		</completion>
+		<completion string="posixGroup">
+			<description>🐜 </description>
+		</completion>
+		<completion string="posixPermissions">
+			<description>🐜 </description>
+		</completion>
+	</set>
+
+	<set name="xml.ant.property">
+		<!-- Default to just be and open/closed tag -->
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<!-- See https://ant.apache.org/manual/Types/propertyset.html for these -->
+		<completion string="propertyset">
+			<description>🐜 </description>
+		</completion>
+
+		<completion string="propertyref">
+			<description>🐜 </description>
+		</completion>
+	</set>
+
+	<!-- See https://ant.apache.org/manual/tasksoverview.html -->
+	<set name="xml.ant.tasks.archive">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="gunzip"><description>🐜 Expands a file packed using GZip.</description></completion>
+		<completion string="bunzip2"><description>🐜 Expands a file packed using BZip2.</description></completion>
+		<completion string="unxz"><description>🐜 Expands a file packed using XZ.</description></completion>
+		<completion string="gzip"><description>🐜 Packs a file using the GZip algorithm. This task does not do any dependency checking; the output file is always generated.</description></completion>
+		<completion string="bzip2"><description>🐜 Packs a file using the BZip2 algorithm. This task does not do any dependency checking; the output file is always generated.</description></completion>
+		<completion string="xz"><description>🐜 Packs a file using the XZ algorithm. This task does not do any dependency checking; the output file is always generated.</description></completion>
+		<completion string="cab"><description>🐜 Creates Microsoft CAB archive files. It is invoked similar to the Jar or Zip tasks. This task will work on Windows using the external cabarc tool (provided by Microsoft), which must be located in your executable path.</description></completion>
+		<completion string="ear"><description>🐜 An extension of the Jar task with special treatment for files that should end up in an Enterprise Application archive.</description></completion>
+		<completion string="jar"><description>🐜 Jars a set of files.</description></completion>
+		<completion string="jlink" deprecated="true"><description>🐜 Use the `zipfileset` and `zipgroupfileset` attributes of the Jar or Zip tasks instead.</description></completion>
+		<completion string="manifest"><description>🐜 Creates a manifest file.</description></completion>
+		<completion string="rpm"><description>🐜 Invokes the `rpm` executable to build a Linux installation file. This task currently only works on Linux or other Unix platforms with RPM support.</description></completion>
+		<completion string="singjar"><description>🐜 Signs a jar or zip file with the `javasign` command-line tool.</description></completion>
+		<completion string="tar"><description>🐜 Creates a tar archive.</description></completion>
+		<completion string="unjar"><description>🐜 Unzips a jarfile.</description></completion>
+		<completion string="untar"><description>🐜 Untars a tarfile.</description></completion>
+		<completion string="unwar"><description>🐜 Unzips a warfile.</description></completion>
+		<completion string="unzip"><description>🐜 Unzips a zipfile.</description></completion>
+		<completion string="war"><description>🐜 An extension of the Jar task with special treatment for files that should end up in the `WEB-INF/lib`, `WEB-INF/classes`, or `WEB-INF` directories of the Web Application Archive.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.coverage">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="jdepend"><description>🐜 Invokes the JDepend parser. This parser "traverses a set of Java source-file directories and generates design-quality metrics for each Java package".</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.compile">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="depend"><description>🐜 Determines which class files are out-of-date with respect to their source, removing the class files of any other classes that depend on the out-of-date classes, forcing the re-compile of the removed class files. Typically used in conjunction with the Javac task.</description></completion>
+		<completion string="javac"><description>🐜 Compiles the specified source file(s) within the running (Ant) JVM, or in another JVM if the fork attribute is specified.</description></completion>
+		<completion string="jspc"><description>🐜 Runs the JSP compiler. It can be used to precompile JSP pages for fast initial invocation of JSP pages, deployment on a server without the full JDK installed, or simply to syntax-check the pages without deploying them. The Javac task can be used to compile the generated Java source. (For WebLogic JSP compiler, see the Wljspc task.)</description></completion>
+		<completion string="netrexxc"><description>🐜 Compiles a NetRexx source tree within the running (Ant) JVM.</description></completion>
+		<completion string="rmic"><description>🐜 Runs the `rmic` compiler on the specified file(s).</description></completion>
+		<completion string="wljspc"><description>🐜 Compiles JSP pages using WebLogic JSP compiler, `weblogic.jspc`. (For non-WebLogic JSP compiler, see the JspC task.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.deployment">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="serverdeploy"><description>🐜 Runs a "hot" deployment tool for vendor-specific J2EE server.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.docs">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="javadoc"><description>🐜 Generates code documentation using the `javadoc` tool. The Javadoc2 task is deprecated; use the Javadoc task instead.</description></completion>
+	</set>
+
+	<!-- More tags in https://ant.apache.org/manual/Tasks/ejb.html no here... -->
+
+	<set name="xml.ant.tasks.execution">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="ant"><description>🐜 Runs Ant on a supplied buildfile, optionally passing properties (with possibly new values). This task can be used to build sub-projects.</description></completion>
+		<completion string="antcall"><description>🐜 Runs another target within the same buildfile, optionally passing properties (with possibly new values).</description></completion>
+		<completion string="apply"><description>🐜 Executes a system command. When the os attribute is specified, the command is only executed when Ant is run on one of the specified operating systems.</description></completion>
+		<completion string="execon" deprecated="true"><description>🐜 Use Apply instead</description></completion>
+		<completion string="dependset"><description>🐜 Compares a set of source files with a set of target files. If any of the source files is newer than any of the target files, all the target files are removed.</description></completion>
+		<completion string="exec"><description>🐜 Executes a system command. When the os attribute is specified, the command is only executed when Ant is run on one of the specified operating systems.</description></completion>
+		<completion string="java"><description>🐜 Executes a Java class within the running (Ant) JVM, or in another JVM if the fork attribute is specified.</description></completion>
+		<completion string="parallel"><description>🐜 A container task that can contain other Ant tasks. Each nested task specified within the &lt;parallel&gt; tag will be executed in its own thread.</description></completion>
+		<completion string="sequential"><description>🐜 A container task that can contain other Ant tasks. The nested tasks are simply executed in sequence. Its primary use is to support the sequential execution of a subset of tasks within the &lt;parallel&gt; tag.</description></completion>
+		<completion string="sleep"><description>🐜 Suspends execution for a specified period of time. Useful when a build or deployment process requires an interval between tasks.</description></completion>
+		<completion string="subant"><description>🐜 Calls a given target for all defined sub-builds. This is an extension of ant for bulk project execution.</description></completion>
+		<completion string="waitfor"><description>🐜 Blocks execution until a set of specified conditions become true. This task is intended to be used with the Parallel task to synchronize a set of processes.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.file">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="attrib"><description>🐜 Changes the permissions and/or attributes of a file or all files inside the specified directories. Currently, it has effect only under Windows.</description></completion>
+		<completion string="checksum"><description>🐜 Generates a checksum for a file or set of files. This task can also be used to perform checksum verifications.</description></completion>
+		<completion string="chgrp"><description>🐜 Changes the group ownership of a file or all files inside the specified directories. Currently, it has effect only under Unix.</description></completion>
+		<completion string="chmod"><description>🐜 Changes the permissions of a file or all files inside the specified directories. Currently, it has effect only under Unix. The permissions are also UNIX style, like the arguments for the `chmod` command.</description></completion>
+		<completion string="chown"><description>🐜 Changes the owner of a file or all files inside the specified directories. Currently, it has effect only under Unix.</description></completion>
+		<completion string="concat"><description>🐜 Concatenates multiple files into a single one or to Ant's logging system.</description></completion>
+		<completion string="сору"><description>🐜 Copies a file or Fileset to a new file or directory.</description></completion>
+		<completion string="соруdir" deprecated="true"><description>🐜 Use the Copy task instead.</description></completion>
+		<completion string="соруfile" deprecated="true"><description>🐜 Use the Copy task instead.</description></completion>
+		<completion string="delete"><description>🐜 Deletes either a single file, all files and sub-directories in a specified directory, or a set of files specified by one or more FileSets.</description></completion>
+		<completion string="deltree" deprecated="true"><description>🐜 </description></completion>
+		<completion string="filter"><description>🐜 Sets a token filter for this project, or reads multiple token filters from a specified file and sets these as filters. Token filters are used by all tasks that perform file-copying operations.</description></completion>
+		<completion string="fixcrlf"><description>🐜 Modifies a file to add or remove tabs, carriage returns, linefeeds, and EOF characters.</description></completion>
+		<completion string="get"><description>🐜 Gets a file from a URL.</description></completion>
+		<completion string="mkdir"><description>🐜 Creates a directory. Non-existent parent directories are created, when necessary.</description></completion>
+		<completion string="move"><description>🐜 Moves a file to a new file or directory, or a set(s) of file(s) to a new directory.
+</description></completion>
+		<completion string="patch"><description>🐜 Applies a "diff" file to originals.</description></completion>
+		<completion string="rename" deprecated="true"><description>🐜 Use the Move task instead.</description></completion>
+		<completion string="renameextensions" deprecated="true"><description>🐜 Use the Move task with a glob mapper instead.</description></completion>
+		<completion string="replace"><description>🐜 Replaces the occurrence of a given string with another string in a file or set of files.</description></completion>
+		<completion string="replaceregexp"><description>🐜 Replaces the occurrence of a given regular expression with a substitution pattern in a file or set of files.</description></completion>
+		<completion string="setpermissions"><description>🐜 Changes the permissions of a collection of resources.</description></completion>
+		<completion string="sync"><description>🐜 Synchronizes two directory trees.</description></completion>
+		<completion string="tempfile"><description>🐜 Generates a name for a new temporary file and sets the specified property to that name.</description></completion>
+		<completion string="touch"><description>🐜 Changes the modification time of a file and possibly creates it at the same time.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.java">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="jarlib-available"><description>🐜 Checks whether an extension is present in a FileSet or an ExtensionSet. If the extension is present, the specified property is set.</description></completion>
+		<completion string="jarlib-display"><description>🐜 Displays the "Optional Package" and "Package Specification" information contained within the specified jars.</description></completion>
+		<completion string="jarlib-manifest"><description>🐜 Generates a manifest that declares all the dependencies in manifest. The dependencies are determined by looking in the specified path and searching for Extension/Optional Package specifications in the manifests of the jars.</description></completion>
+		<completion string="jarlib-resolve"><description>🐜 Tries to locate a jar to satisfy an extension, and places the location of the jar into the specified property.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.logging">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="record"><description>🐜 Runs a listener that records the logging output of the build process events to a file. Several recorders can exist at the same time. Each recorder is associated with a file.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.mail">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="mail"><description>🐜 Sends SMTP email.</description></completion>
+		<completion string="mimemail"><description>🐜 Use the Mail task instead.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.misc">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="defaultexcludes"><description>🐜 Modifies the list of default exclude patterns from within your build file.</description></completion>
+		<completion string="echo"><description>🐜 Echoes text to `System.out` or to a file.</description></completion>
+		<completion string="fail"><description>🐜 Exits the current build by throwing a `BuildException`, optionally printing additional information.</description></completion>
+		<completion string="genkey"><description>🐜 Generates a key in keystore.</description></completion>
+		<completion string="hostinfo"><description>🐜 Sets properties related to the provided host, or to the host the process is run on.</description></completion>
+		<completion string="input"><description>🐜 Allows user interaction during the build process by displaying a message and reading a line of input from the console.</description></completion>
+		<completion string="script"><description>🐜 Executes a script in a Apache BSF-supported language.</description></completion>
+		<completion string="sound"><description>🐜 Plays a sound file at the end of the build, according to whether the build failed or succeeded.</description></completion>
+		<completion string="splash"><description>🐜 Displays a splash screen.</description></completion>
+		<completion string="sql"><description>🐜 Executes a series of SQL statements via JDBC to a database. Statements can either be read in from a text file using the src attribute, or from between the enclosing SQL tags.</description></completion>
+		<completion string="taskdef"><description>🐜 Adds a task definition to the current project, such that this new task can be used in the current project.</description></completion>
+		<completion string="stamp"><description>🐜 Sets the `DSTAMP`, `TSTAMP`, and `TODAY` properties in the current project, based on the current date and time.</description></completion>
+		<completion string="typedef"><description>🐜 Adds a data-type definition to the current project, such that this new type can be used in the current project.</description></completion>
+		<completion string="xmlvalidate"><description>🐜 Checks that XML files are valid (or only well-formed). This task uses the XML parser that is currently used by Ant by default, but any SAX1/2 parser can be specified, if needed.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.preprocess">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="antlr"><description>🐜 Invokes the ANTLR Translator generator on a grammar file.</description></completion>
+		<completion string="antstructure"><description>🐜 Generates a DTD for Ant buildfiles that contains information about all tasks currently known to Ant.</description></completion>
+		<completion string="import"><description>🐜 Imports another build file and potentially overrides targets in it with targets of your own.</description></completion>
+		<completion string="include"><description>🐜 Includes another build file.</description></completion>
+		<completion string="javacc"><description>🐜 Invokes the JavaCC compiler-compiler on a grammar file.</description></completion>
+		<completion string="javah"><description>🐜 Generates JNI headers from a Java class.</description></completion>
+		<completion string="jidoc"><description>🐜 Invokes the JJDoc documentation generator for the JavaCC compiler-compiler. JJDoc takes a JavaCC parser specification and produces documentation for the BNF grammar. It can operate in three modes, determined by command line options. This task only invokes JJDoc if the grammar file is newer than the generated BNF grammar documentation.</description></completion>
+		<completion string="jlree"><description>🐜 Invokes the JJTree preprocessor for the JavaCC compiler-compiler. It inserts parse-tree building actions at various places in the JavaCC source that it generates. The output of JJTree is run through JavaCC to create the parser. This task only invokes JJTree if the grammar file is newer than the generated JavaCC file.</description></completion>
+		<completion string="macrodef"><description>🐜 Defines a new task as a macro built-up upon other tasks.</description></completion>
+		<completion string="native2ascii"><description>🐜 Converts files from native encodings to ASCII with escaped Unicode. A common usage is to convert source files maintained in a native operating system encoding to ASCII, prior to compilation.</description></completion>
+		<completion string="presetdef"><description>🐜 Defines a new task by instrumenting an existing task with default values for attributes or child elements.</description></completion>
+		<completion string="translate"><description>🐜 Identifies keys in files, delimited by special tokens, and translates them with values read from resource bundles.</description></completion>
+		<completion string="xslt"><description>🐜 Processes a set of documents via XSLT.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.property">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="available"><description>🐜 Sets a property if a specified file, directory, class in the classpath, or JVM system resource is available at run time.</description></completion>
+		<completion string="basename"><description>🐜 Sets a property to the last element of a specified path.</description></completion>
+		<completion string="buildnumber"><description>🐜 Helps tracking build numbers.</description></completion>
+		<completion string="condition"><description>🐜 Sets a property if a certain condition holds true; this is a generalization of Available and Uptodate.</description></completion>
+		<completion string="dirname"><description>🐜 Sets a property to the value of the specified file up to, but not including, the last path element.</description></completion>
+		<completion string="echoproperties"><description>🐜 Lists the current properties.</description></completion>
+		<completion string="loadfile"><description>🐜 Loads a file into a property.</description></completion>
+		<completion string="loadproperties"><description>🐜 Loads a file's contents as Ant properties. This task is equivalent to using `&lt;property file="..."/&gt;` except that it supports nested `&lt;filterchain&gt;`` elements, and it cannot be specified outside a target.</description></completion>
+		<completion string="makeurl"><description>🐜 Creates a URL (list) from a file/fileset or path</description></completion>
+		<completion string="pathconvert"><description>🐜 Converts a nested path, path reference, filelist reference, or fileset reference to the form usable on a specified platform and/or to a list of items separated by the specified separator and stores the result in the specified property.</description></completion>
+
+		<!--
+			PROPERTY
+		-->
+		<!-- Property with values -->
+		<completion string="property">
+			<behavior variable="true">
+				<append> name="$[name]" value="$[value]"&gt;
+&lt;/${completion}&gt;</append>
+			</behavior>
+			<description>🐜 Sets a property (by name and value) in the project.</description>
+		</completion>
+
+		<!-- Property with file -->
+		<completion string="property">
+			<behavior variables="true">
+				<append> file="$[file]"&gt;
+&lt;/${completion}&gt;</append>
+			</behavior>
+			<description>🐜 Sets a set of properties (from a file) in the project.</description>
+		</completion>
+
+		<completion string="property">
+			<behavior variables="true">
+				<append> environment="$[env]"&gt;
+&lt;/${completion}&gt;</append>
+			</behavior>
+			<description>🐜 Sets a set of properties (from a resource) in the project.</description>
+		</completion>
+
+		<completion string="propertyfile"><description>🐜 Creates or modifies property files. Useful when wanting to make unattended modifications to configuration files for application servers and applications. Typically used for things such as automatically generating a build number and saving it to a build properties file, or doing date manipulation.</description></completion>
+		<completion string="uptodate"><description>🐜 Sets a property if a given target file is newer than a set of source files.</description></completion>
+		<completion string="whichresource"><description>🐜 Finds a class or resource.</description></completion>
+		<completion string="xmlproperty"><description>🐜 Loads property values from a well-formed XML file.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.remote">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+
+		<completion string="ftp"><description>🐜 Implements a basic FTP client that can send, receive, list, and delete files, and create directories.</description></completion>
+		<completion string="rexec"><description>🐜 Automates a `rexec` session.</description></completion>
+		<completion string="scp"><description>🐜 Copies files to or from a remote server using SSH.</description></completion>
+		<completion string="setproxy"><description>🐜 Sets Java's HTTP proxy properties, so that tasks and code run in the same JVM can have access to remote web sites through a firewall.</description></completion>
+		<completion string="sshexec"><description>🐜 Executes a command on a remote server using SSH.</description></completion>
+		<completion string="telnet		"><description>🐜 Automates a `telnet` session. This task uses nested &lt;read&gt; and &lt;write&gt; tags to indicate strings to wait for and specify text to send.</description></completion>
+	</set>
+
+	<set name="xml.ant.tasks.scm">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+		<completion string="cvs"><description>🐜 Generates an XML report of the changes recorded in a CVS repository.</description></completion>
+		<completion string="cvschangelog"><description>🐜 Generates an XML report of the changes recorded in a CVS repository</description></completion>
+		<completion string="cvspass"><description>🐜 Adds entries to a `.cvspass` file. Adding entries to this file has the same affect as a `cvs login` command.</description></completion>
+		<completion string="cvsdifftag"><description>🐜 Generates an XML-formatted report file of the changes between two tags or dates recorded in a CVS repository.</description></completion>
+
+		<!-- @TODO Other SCM Tasks -->
+		<!-- See: https://ant.apache.org/manual/Tasks/clearcase.html -->
+		<!-- See: https://ant.apache.org/manual/Tasks/ccm.html -->
+		<!-- See: https://ant.apache.org/manual/Tasks/vss.html -->
+		<completion string="pvcs"><description>🐜 Allows the user extract the latest edition of the source code from a PVCS repository.</description></completion>
+		<!-- See: https://ant.apache.org/manual/Tasks/sos.html-->
+
+	</set>
+
+	<set name="xml.ant.tasks.testing">
+		<behavior variables="true" suffix="(?!&gt;)">
+			<append>&gt;$[]&lt;/${completion}&gt;</append>
+		</behavior>
+		<completion string="junit"><description>🐜 Runs tests from the Junit testing framework. This task has been tested with JUnit 3.0 and later; it won't work with versions prior to JUnit 3.0.</description></completion>
+		<completion string="junitreport"><description>🐜 Merges the individual XML files generated by the Junit task and applies a stylesheet on the resulting merged document to provide a browsable report of the testcases results.</description></completion>
+	</set>
+</completions>

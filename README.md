@@ -1,6 +1,6 @@
 # Ant Extension for Panic's Nova
 
-Extension for running [Apache Ant](https://ant.apache.org/) build targets from a sidebar in [Panic's Nova](https://nova.app/)
+Extension for running [Apache Ant](https://ant.apache.org/) build targets from a sidebar in [Panic's Nova](https://nova.app/) as well as (work-in-progress) completions in XMLs file.
 
 Includes Apache Ant 1.10.14 binaries, so no additional installs are needed.
 

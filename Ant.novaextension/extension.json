@@ -3,16 +3,14 @@
 	"name": "Ant",
 	"organization": "Abattoir Software",
 	"description": "Sidebar extension for Nova's Panic to view and run Apache Ant builds",
-	"version": "0.7",
-	"categories": ["sidebars"],
+	"version": "0.8.0",
+	"categories": ["sidebars","completions"],
 
 	"main": "main.js",
 
 	"homepage": "https://github.com/AmigaAbattoir/nova-ant",
 	"repository": "https://github.com/AmigaAbattoir/nova-ant",
-	"bugs": {
-		"url": "https://github.com/AmigaAbattoir/nova-ant/issues"
-	},
+	"bugs": "https://github.com/AmigaAbattoir/nova-ant/issues",
 
 	"activationEvents": [
 		"onWorkspaceContains:build.xml"

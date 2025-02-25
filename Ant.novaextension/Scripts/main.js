@@ -88,7 +88,10 @@ exports.loadAndParseBuildXML = function(filename) {
 	// If not a valid or empty XML, clear the window
 	if(buildXmlString==null || buildXmlString=="") {
 		if(buildXmlString==null) {
-			showNotification("Error loading Build file","Cannot open file at " + antBuildXmlFileAndPath + " for reading");
+			// Only warn if the Ant file is not the default, because maybe, there is no Ant for this project!
+			if(antBuildXmlFileAndPath!=nova.path.join(nova.workspace.path, "build.xml")) {
+				showNotification("Error loading Build file","Cannot open file at " + antBuildXmlFileAndPath + " for reading");
+			}
 		} else if(buildXmlString=="") {
 			showNotification("Unable to use empty build.xml");
 		}

@@ -1,32 +1,74 @@
-## Version 0.7
+# Changelog
 
-* Added notices about Apache Ant
+The format is based on [Keep a Changelog 1.1](http://keepachangelog.com/en/1.1.0/)
+and this project adheres to [Semantic Versioning 2.0](http://semver.org/spec/v2.0.0.html).
 
-## Version 0.6
+### Todo
 
-* Changed NS3X2J to optionally store position of node
-* Change other scripts around
-* Created new icons
+- When editor's view is wrapped, "Show in XML" does not go to the correct position.
 
-## Version 0.5
+## [0.8.0] - 2025-02-25
 
-* Added configuration options
+### Added
 
-## Version 0.4
+- Started adding completions for Ant tags and attributes
+- Screenshot to README.md
 
-* Changed NS3X2J to handle parsing unmodified XML string.
-* NS3X2J stores position of elements
-* Fix context menus to only enable relevant options.
+### Fixed
 
-## Version 0.3
+- NS3X2J was skipping whitespace inside a tag's content
 
-* Show nested commands in tree.
+### Changed
 
-## Version 0.2
+- Only warns about missing build file if it's not the default
 
-* Replaced XML parsing with custom XML parser
+## [0.7.0] - 2024-09-27
 
-## Version 0.1
+- Added notices about Apache Ant
 
-* Started running targets!
-* Initial commit
+## [0.6.0] - 2024-07-04
+
+### Added
+
+- Created new icons
+
+### Changed
+
+- NS3X2J optionally stores position of node
+- Clean up and change other scripts around
+
+## [0.5.0] - 2024-07-01
+
+### Added
+
+- Configuration options
+
+## [0.4.0] - 2024-06-23
+
+### Changed
+
+- NS3X2J to handle parsing unmodified XML string.
+- NS3X2J stores position of elements.
+
+### Fixed
+
+- Context menus to only enable relevant options.
+
+## [0.3.0] - 2024-06-22
+
+### Changed
+
+- Show nested commands in tree.
+
+## [0.2.0] - 2024-06-19
+
+### Changed
+
+- Replaced XML parsing with custom XML parser
+
+## [0.1.0] - 2024-03-17
+
+### Added
+
+- Started running targets!
+- Initial commit

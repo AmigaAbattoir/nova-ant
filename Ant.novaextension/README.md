@@ -1,8 +1,8 @@
-**Ant** provides sidebar integration to use **[Apache Ant](https://ant.apache.org/)** to allow you to launch build targets.
+**Ant** provides sidebar integration to use **[Apache Ant](https://ant.apache.org/)** to allow you to launch build targets. It also includes (work-in-progress) completion in XMLs to help edit your XMLs.
 
 Included in the extensions is Apache Ant 1.10.14.
 
-![](images/ant-screenshot.png)
+![](assets/ant-screenshot.png)
 
 ## Requirements
 
@@ -22,6 +22,10 @@ To display the Ant sidebar:
 In the Ant sidebar, you can right-click and select "Run" on a target.
 
 On targets and on other elements in the sidebar, you can also select "Show in Build XML" to jump to that point in the XML
+
+## Notes
+
+When word wrapping is enabled, sometimes the `Show in Build XML` does not go to the correct position.
 
 ## Configuration
 
