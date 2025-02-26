@@ -24,7 +24,9 @@ and this project adheres to [Semantic Versioning 2.0](http://semver.org/spec/v2.
 
 ## [0.7.0] - 2024-09-27
 
-- Added notices about Apache Ant
+### Added
+
+- Notices about Apache Ant
 
 ## [0.6.0] - 2024-07-04
 
