@@ -3,9 +3,15 @@
 The format is based on [Keep a Changelog 1.1](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning 2.0](http://semver.org/spec/v2.0.0.html).
 
-### Todo
+## [0.9.0] - 2025-07-01
 
-- When editor's view is wrapped, "Show in XML" does not go to the correct position.
+### Added
+
+- NS3X2J now stores the index of the start of elements. Useful for selecting in Nova!
+
+### Fixed
+
+- When editor's view is wrapped, "Show in XML" did not go to the correct position.
 
 ## [0.8.0] - 2025-02-25
 
@@ -20,7 +26,7 @@ and this project adheres to [Semantic Versioning 2.0](http://semver.org/spec/v2.
 
 ### Changed
 
-- Only warns about missing build file if it's not the default
+- Only shows warning about missing build file when opening a project if it's not the default
 
 ## [0.7.0] - 2024-09-27
 

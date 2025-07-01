@@ -1,5 +1,5 @@
 const xmlToJson = require('./not-so-simple-simple-xml-to-json.js');
-const { showNotification, consoleLogObject, isWorkspace, getWorkspaceOrGlobalConfig } = require("./nova-utils.js");
+const { showNotification, consoleLogObject, isWorkspace, getWorkspaceOrGlobalConfig, getStringOfFile } = require("./nova-utils.js");
 
 var treeView = null;
 var previousBuildXmlData = "";
@@ -10,40 +10,6 @@ const DEFAULT_BUILD_FILE = "build.xml;"
 const DEFAULT_BUILD_AND_PATH = nova.path.join(DEFAULT_PATH, DEFAULT_BUILD_FILE);
 
 var antBuildXmlFileAndPath = DEFAULT_BUILD_AND_PATH;
-
-/**
- * Opens a file and dumps it into a string.
- * @param {string} filename - The name of the file to open, relative to the workspace
- * @param {boolean} trimAll - Default: true. Trims each line, and removes extra spacing
- * @returns {String|null} - The contents of the text file or null if not able to open
- */
-function getStringOfWorkspaceFile(filename, trimAll = true) {
-	var line, contents;
-	try {
-		contents = "";
-		//console.log("Trying to open: " + nova.path.join(nova.workspace.path, filename));
-		var file = nova.fs.open(filename);
-		if(file) {
-			do {
-				line = file.readline();
-				if(line!=null) {
-					if(trimAll) {
-						line = line.trim();
-					}
-					contents += line;
-				}
-			} while(line && line.length>0);
-		}
-
-		if(trimAll) {
-			contents = contents.replace((/  |\r\n|\n|\r/gm),"");  // contents.replace(/(\r\n|\n|\r)/gm,"")
-		}
-	} catch(error) {
-		console.log("*** ERROR: Could not open file " + filename + " for reading. ***");
-		return null;
-	}
-	return contents;
-}
 
 /**
  * When the extension is activated, we want to load the build.xml and then set up a watch on that file so if it changes
@@ -83,7 +49,7 @@ exports.figureBuildFile = function () {
  */
 exports.loadAndParseBuildXML = function(filename) {
 	// If there's a build.xml, parse it
-	var buildXmlString = getStringOfWorkspaceFile(antBuildXmlFileAndPath,false);
+	var buildXmlString = getStringOfFile(antBuildXmlFileAndPath);
 
 	// If not a valid or empty XML, clear the window
 	if(buildXmlString==null || buildXmlString=="") {
@@ -133,22 +99,13 @@ exports.deactivate = function() {
 exports.openBuildAndGoTo = function() {
 	nova.workspace.openFile(antBuildXmlFileAndPath).then((textDocument) => {
 		var editor = nova.workspace.activeTextEditor;
-
 		if (editor) {
 			var selection = treeView.selection;
 			if(selection) {
-				var selectedLine = selection.map((e) => e.line)[0];
-
-				// If we have a selectedLine, then figure the name of the node and what to highlight!
-				if(selectedLine!=0) {
-					var selectedNodeName = selection.map((e) => e.nodeName)[0];
-					var selectedColumn = selection.map((e) => e.column)[0];
-
-					editor.moveToTop();
-					editor.moveDown(selectedLine-1);
-					editor.moveRight(selectedColumn);
-					editor.selectRight(selectedNodeName.length);
-				}
+				var selectedIndex = selection.map((e) => e.charIndex)[0];
+				var selectedNodeName = selection.map((e) => e.nodeName)[0];
+				editor.selectedRange = new Range(selectedIndex, selectedIndex+ selectedNodeName.length);
+				editor.scrollToPosition(selectedIndex);
 			}
 		}
 	});
@@ -245,12 +202,13 @@ exports.runTarget = function(targetName) {
  * like the line and column so we can jump to it, also which `type` of icon to show
  */
 class AntItem {
-	constructor(name, type, nodeName, line = 0, column = 0) {
+	constructor(name, type, nodeName, line = 0, column = 0, charIndex = 0) {
 		this.name = name;
 		this.type = type;
 		this.nodeName = nodeName;
 		this.line = line;
 		this.column = column;
+		this.charIndex = charIndex;
 		this.children = [];
 		this.parent = null;
 	}
@@ -282,7 +240,7 @@ class AntDataProvider {
 		let antItems = [];
 
 		// Start with a holder for the name and title of the build.xml
-		let holder = new AntItem(projectName,"ant","project",position.line,position.column);
+		let holder = new AntItem(projectName,"ant","project",position.line,position.column,position.charIndex);
 		antItems.push(holder);
 
 		// Add to the holder each target node.
@@ -294,9 +252,9 @@ class AntDataProvider {
 
 				// Check if it's a target with a description since it get's a different icon in the treeview
 				if(a["@"].description) {
-					element = new AntItem(a["@"].name,"target-with-desc","target",a.line,a.column);
+					element = new AntItem(a["@"].name,"target-with-desc","target",a.line,a.column,a.charIndex);
 				} else {
-					element = new AntItem(a["@"].name,"target","target",a.line,a.column);
+					element = new AntItem(a["@"].name,"target","target",a.line,a.column,a.charIndex);
 				}
 
 				// Now we can add this element to the holder
@@ -386,7 +344,7 @@ class AntDataProvider {
 
 				// If the child name is empty, then do not add an AntItem to the list
 				if(childName!="") {
-					childElement = new AntItem(childName, childType, c.name, c.line, c.column);
+					childElement = new AntItem(childName, childType, c.name, c.line, c.column, c.charIndex);
 					parent.addChild(childElement);
 				}
 

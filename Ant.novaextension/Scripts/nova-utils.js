@@ -16,7 +16,7 @@
  */
 exports.showNotification = function(title, body, closeButtonName = "") {
 	//if (nova.inDevMode()) {
-		let request = new NotificationRequest("ant-nova-message");
+		let request = new NotificationRequest("ant-nova-message"+requestIdAddition);
 
 		request.title = nova.localize(title);
 		request.body = nova.localize(body);
@@ -32,15 +32,16 @@ exports.showNotification = function(title, body, closeButtonName = "") {
  * @param {string} command - The command to use
  * @param {Array} args - An array with the arguments for the command (optional)
  * @param {string} cwd - The working directory (defaults to current, extension's directory)
+ * @param {Object} env - Additional envs to set for the process (optional)
  * @retruns {Promise} - If the status is 0, then it `resolves` otherwise `rejects`. Both will
  * return back an object containing status, stdout and stderr.
  */
-exports.getProcessResults = function(command, args = [], cwd = "") {
+exports.getProcessResults = function(command, args = [], cwd = "", env = {}) {
 	var proc = new Promise((resolve, reject) => {
 		var stdout = "";
 		var stderr = "";
 
-		var process = new Process(command, { args: args, cwd: cwd });
+		var process = new Process(command, { args: args, cwd: cwd, env: env });
 		process.onStdout(line => stdout += line);
 		process.onStderr(line => stderr += line);
 		process.onDidExit(status => {
@@ -51,6 +52,9 @@ exports.getProcessResults = function(command, args = [], cwd = "") {
 			console.log("                    command: " + command);
 			console.log("                    args: ");
 			consoleLogObject(args);
+			console.log("                    cwd: " + cwd);
+			console.log("                    env: ");
+			consoleLogObject(env);
 			*/
 			let results = { status: status, stdout: stdout, stderr: stderr };
 			/*
@@ -90,9 +94,8 @@ exports.isWorkspace = function() {
 }
 
 /**
- * Gets a Config value. If you are in a workspace, it will also look if there is a workspace config with that name that should override it.
- *
- * @param {string} configName - The name of the configuration
+ * Returns a config, first checking for the extension, then if there is a Workspace value
+ * @param {String} configName - The key of the configuration to get
  */
 exports.getWorkspaceOrGlobalConfig = function(configName) {
 	var config = nova.config.get(configName);
@@ -109,7 +112,7 @@ exports.getWorkspaceOrGlobalConfig = function(configName) {
 }
 
 /**
- * Save all open text editors
+ * Saves all the open text editors!
  */
 exports.saveAllFiles = function() {
 	nova.workspace.textEditors.forEach((editor)=> {
@@ -118,19 +121,60 @@ exports.saveAllFiles = function() {
 }
 
 /**
- * Help to console log objects
- *
- * @param {Object} object - The Object to try and log to console
+ * Helper to log out an object by trying to stringify it
+ * @param {Object} object - What you want to try to console.log()
  */
 exports.consoleLogObject = function(object) {
-	console.log(JSON.stringify((object!=null ? object : " null"),null,4));
+	console.log(JSON.stringify(object,null,4));
 }
 
 /**
- * Converts a Panic Nova range to something some LSP would understand
+ * Resolved symbolic links to their real location
  *
- * @param {Document} document - The document that is to be examined
- * @param {Object} range - An object containing a start and end
+ * @param {string} folder - The location that is a symbolic link
+ * @returns {Promise} The resolved path, or a reject error.
+ */
+exports.resolveSymLink = function(folder) {
+	return new Promise((resolve, reject) => {
+		try {
+			const process = new Process("/usr/bin/readlink", {
+				args: [folder]
+			});
+
+			let output = "";
+			let errorOutput = "";
+
+			process.onStdout(line => {
+				output += line.trim();
+			});
+
+			process.onStderr(line => {
+				errorOutput += line.trim();
+			});
+
+			process.onDidExit(status => {
+				if (status === 0) {
+					// Successfully resolved the symbolic link
+					const lastSlashIndex = folder.lastIndexOf('/');
+					const basePath = folder.substring(0, lastSlashIndex);
+					const resolvedPath = nova.path.normalize(nova.path.join(basePath, output));
+					resolve(resolvedPath);
+				} else {
+					reject(new Error(`Failed to resolve symlink for ${folder}: ${errorOutput}`));
+				}
+			});
+
+			process.start();
+		} catch (error) {
+			reject(error);
+		}
+	});
+}
+
+/**
+ * (NOT USED) Convert's a document's selected range to
+ * @param {TextDocument} document - The text document that's open
+ * @param {Range} range - The selected range?
  */
 exports.rangeToLspRange = function(document, range) {
 	const fullContents = document.getTextInRange(new Range(0, document.length));
@@ -156,4 +200,219 @@ exports.rangeToLspRange = function(document, range) {
 		chars += lineLength;
 	}
 	return null;
-};
+}
+
+/**
+ * Opens a file and dumps it into a string.
+ * @param {string} filename - The name of the file to open, relative to the workspace
+ */
+exports.getStringOfFile = function(filename) {
+	var line, contents;
+	try {
+		contents = "";
+		// console.log("Trying to open: " + filename);
+		var file = nova.fs.open(filename);
+		if(file) {
+			do {
+				line = file.readline();
+				if(line!=null) {
+					contents += line;
+				}
+			} while(line && line.length>0);
+		}
+	} catch(error) {
+		console.log("*** ERROR: Could not open file " + filename + " for reading. " + error + " ***");
+		return null;
+	}
+	return contents;
+}
+
+/**
+ * Returns a string as a sortable timestamp.
+ * @returns {String} - The current timestamp in YYYYMMDDD_HHmmss
+ */
+exports.getCurrentDateAsSortableString = function() {
+	const now = new Date();
+
+	const year = now.getFullYear();
+	const month = String(now.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+	const day = String(now.getDate()).padStart(2, '0');
+	const hours = String(now.getHours()).padStart(2, '0');
+	const minutes = String(now.getMinutes()).padStart(2, '0');
+	const seconds = String(now.getSeconds()).padStart(2, '0');
+
+	return `${year}${month}${day}_${hours}${minutes}${seconds}`;
+}
+
+/**
+ * Makes sure that we have a folder so we can put stuff in it
+ *
+ * @returns {boolean} - True if the folder is there, otherwise false
+ */
+exports.ensureFolderIsAvailable = function(folder) {
+	console.log("export.ensureFolderIsAvailable  folder is " + folder);
+	if(nova.fs.access(folder, nova.fs.F_OK | nova.fs.X_OK)===false) {
+		// console.log(" Making folder at " + folder + "!!!");
+		nova.fs.mkdir(folder+"/");
+	}
+	// Double check, do we have the folder?
+	if(nova.fs.access(folder, nova.fs.F_OK | nova.fs.X_OK)===false) {
+		console.log(" *** ERROR: Failed to make folder at " + folder + "! ***");
+		return false;
+	}
+	return true;
+}
+
+exports.makeOrClearFolder = function(folder) {
+	try {
+		if(nova.fs.access(folder, nova.fs.F_OK | nova.fs.X_OK)===false) {
+			// console.log(" Making folder at " + folder + "!!!");
+			nova.fs.mkdir(folder+"/");
+		} else if(nova.fs.stat(folder).isDirectory()) {
+			// console.log("Trying to remove directory....");
+			nova.fs.rmdir(folder);
+			nova.fs.mkdir(folder+"/");
+		}
+		return true;
+	} catch(error) {
+		nova.workspace.showErrorMessage("Failed to make folder: " + folder + "\n",error);
+		// console.log("*** ERROR: Failed to make folder " + folder + " *** ");
+	}
+	return false;
+}
+
+/**
+ * Loop through each item in the releasePath, and if it's not the app.xml, copy it to the packing
+ * @param {string} folderPath - The folder path to look through
+ * @param {string} relativePath - The relative path name from this directory
+ * @returns {Array} - Files names with path
+ */
+exports.listFilesRecursively = function(folderPath, relativePath = "") {
+	let fileList = [];
+	try {
+		nova.fs.listdir(folderPath).forEach(filename => {
+			let fullPath = nova.path.join(folderPath, filename);
+			let currentRelativePath = nova.path.join(relativePath, filename);
+
+			if (nova.fs.stat(fullPath).isDirectory()) {
+				// Recurse into subdirectory and add the returned files to the list
+				fileList = fileList.concat(exports.listFilesRecursively(fullPath, currentRelativePath));
+			} else {
+				// Add the relative file path to the list
+				fileList.push(currentRelativePath);
+			}
+		});
+	} catch (error) {
+		console.error(`Error reading folder ${folderPath}: ${error}`);
+	}
+	return fileList;
+}
+
+/**
+ * Finds the actual executable file in a Mac App
+ * @param {string} appLocation - Location of the Application.app "folder"
+ * @returns {string|null} - The location of the first executable in the .app, otherwise null
+ */
+exports.getExec = function(appLocation) {
+	const exePath = nova.path.join(appLocation,"/Contents/MacOS"); // Path to the MacOS folder
+	let execFiles
+	try {
+		execFiles = nova.fs.listdir(exePath); // List all files in the folder
+		if (!execFiles) {
+			console.error("No files found in " + exePath);
+			return null;
+		}
+		for (const exec of execFiles) {
+			const execCheck = nova.path.join(exePath,exec);
+			if (nova.fs.access(execCheck, nova.fs.F_OK | nova.fs.X_OK)) {
+				return execCheck; // Return the first executable file found
+			}
+		}
+	} catch(error) {
+		return null;
+	}
+}
+
+/**
+ * Shows a Choice Palette, with the option of an "All" at the top.
+ * @param {Array} items - The items to show in the list
+ * @param {String} placeholder - The initial item or placeholder
+ * @param {boolean} addAll - Optional: Include an "All" item at the top
+ */
+exports.quickChoicePalette = function(items, placeholder, addAll = false) {
+	return new Promise((resolve) => {
+		if(addAll) {
+			items.unshift( "All" );
+		}
+
+		nova.workspace.showChoicePalette(items, {
+			placeholder: placeholder,
+		}, (value,index) => {
+			/*
+			nova.workspace.showInformativeMessage(`Got choice: [[${value}]]`);
+			console.log("Got choice:", value);
+			console.log("Got index:", index);
+			*/
+			resolve({ value, index });
+		});
+	})
+}
+
+/**
+ * Represents the objects that are used for the `collectInput` function
+ * @typedef {Object} CollectInputPrompt
+ * @property {string} message - What text will be displayed as the panel body
+ * @property {string} label - Optional: Label to display before the input field
+ * @property {string} value - Default value to display, default is blank
+ * @property {string} placeholder - Text to display if no value is present or empty
+ * @property {Boolean} isRequired - If set to true, the textfield will display as dots
+ * @property {string} prompt - Text to display instead for the “OK” button
+ * value is empty.
+ * @property {string} isSecure - Optional: if the input should be masked out
+ */
+
+/**
+ * Asks several text prompts and then resolves with all the answers
+ * @param {Array<CollectInputPrompt>} prompts - An Array of CollectInputPrompt to be asked.
+ * @returns {Array<String>} - An array containing the text values that were entered
+ */
+exports.collectInput = function(prompts) {
+	return new Promise((resolve) => {
+		let results = [];
+		let index = 0;
+
+		function askNext(additionalMessage = "") {
+			if (index < prompts.length) {
+				const prompt = prompts[index];
+				nova.workspace.showInputPanel(
+					prompt.message + additionalMessage,
+					{
+						label: prompt.label || "",
+						placeholder: prompt.placeholder || "",
+						value: prompt.value || "",
+						isSecure: prompt.isSecure || false,
+						prompt: prompt.prompt || ""
+					},
+					(result) => {
+						if (result===null || result===undefined) {
+							// User canceled the input, resolve early with null
+							resolve(null);
+						} else if (prompt.isRequired && result.trim() === "") {
+							// If input is required and empty, show the same prompt again
+							askNext("\nInput cannot be empty. Please try again.");
+						} else {
+							results.push(result);
+							index++;
+							// Ask the next question
+							askNext();
+						}
+					}
+				);
+			} else {
+				// All prompts completed, resolve with the collected results
+				resolve(results);
+			}
+		}
+		askNext();
+	});
+}
