@@ -3,7 +3,7 @@
 	"name": "Ant",
 	"organization": "Abattoir Software",
 	"description": "Sidebar extension for Nova's Panic to view and run Apache Ant builds",
-	"version": "0.8.0",
+	"version": "0.9.0",
 	"categories": ["sidebars","completions"],
 
 	"main": "main.js",
