@@ -3,7 +3,7 @@
 	"name": "Ant",
 	"organization": "Abattoir Software",
 	"description": "Sidebar extension for Nova's Panic to view and run Apache Ant builds",
-	"version": "0.9.0",
+	"version": "0.9.1",
 	"categories": ["sidebars","completions"],
 
 	"main": "main.js",
@@ -27,8 +27,8 @@
 			"key": "ant.ant.path",
 			"title": "Ant Path",
 			"type": "path",
-			"placeholder": "Use included Ant 1.10.14 package",
-			"description": "If you want to use a different version of Ant, then specifiy the location of the ant executable. (ie: apache-ant-1.10.14/bin)"
+			"placeholder": "Use included Ant 1.10.15 package",
+			"description": "If you want to use a different version of Ant, then specifiy the location of the ant executable. (ie: apache-ant-1.10.15/bin)"
 		}
 	],
 
@@ -37,8 +37,8 @@
 			"key": "ant.ant.path",
 			"title": "Ant Path",
 			"type": "path",
-			"placeholder": "Use included Ant 1.10.14 package",
-			"description": "If you want to use a different version of Ant, then specifiy the location of the ant executable. (ie: apache-ant-1.10.14/bin)"
+			"placeholder": "Use included Ant 1.10.15 package",
+			"description": "If you want to use a different version of Ant, then specifiy the location of the ant executable. (ie: apache-ant-1.10.15/bin)"
 		},
 		{
 			"key": "ant.build.file",

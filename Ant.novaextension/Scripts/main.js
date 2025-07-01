@@ -4,7 +4,7 @@ const { showNotification, consoleLogObject, isWorkspace, getWorkspaceOrGlobalCon
 var treeView = null;
 var previousBuildXmlData = "";
 
-const DEFAULT_ANT_EXE = nova.path.join(nova.path.join(nova.extension.path, "apache-ant-1.10.14"),"bin") + "/ant";
+const DEFAULT_ANT_EXE = nova.path.join(nova.path.join(nova.extension.path, "apache-ant-1.10.15"),"bin") + "/ant";
 const DEFAULT_PATH = nova.workspace.path;
 const DEFAULT_BUILD_FILE = "build.xml;"
 const DEFAULT_BUILD_AND_PATH = nova.path.join(DEFAULT_PATH, DEFAULT_BUILD_FILE);
