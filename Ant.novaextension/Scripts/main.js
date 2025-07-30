@@ -1,5 +1,7 @@
 const xmlToJson = require('./not-so-simple-simple-xml-to-json.js');
-const { showNotification, consoleLogObject, isWorkspace, getWorkspaceOrGlobalConfig, getStringOfFile } = require("./nova-utils.js");
+const { showNotification, cancelNotification, consoleLogObject, isWorkspace, getWorkspaceOrGlobalConfig, getStringOfFile } = require("./nova-utils.js");
+
+var issuesCol = new IssueCollection();
 
 var treeView = null;
 var previousBuildXmlData = "";
@@ -69,6 +71,35 @@ exports.loadAndParseBuildXML = function(filename) {
 
 	// Parse the XML to JSON.
 	var buildJson = new xmlToJson.ns3x2j(buildXmlString,true);
+
+	// If NS3X2J has errors, let's parse them and add issues
+	if(buildJson.error!="") {
+		var errors = buildJson.error.split("\n\n");
+
+		var issues = [];
+
+		for(const err of errors) {
+			const match = err.match(/^Error:\s*(.*?)\s+at position line:\s*(\d+),\s*col:\s*(\d+)/);
+			if (match) {
+				var issue = new Issue();
+
+				issue.message = match[1];
+				issue.severity = IssueSeverity.Error;
+				issue.line = parseInt(match[2], 10);
+				issue.column = parseInt(match[3], 10);
+				issue.source = "ANT";
+
+				issues.push(issue);
+			}
+		}
+
+		// Pass issues to the issue collector!
+		issuesCol.set("file:///" + antBuildXmlFileAndPath, issues);
+		showNotification("ANT XML Parse Error","Please resolve issues with the build file.","Oh no!","Error");
+	} else {
+		issuesCol.remove("file:///" + antBuildXmlFileAndPath);
+		cancelNotification("Error");
+	}
 
 	// Check if the data really changed, if not just leave our tree alone!
 	if(buildJson.xmlString==previousBuildXmlData) {

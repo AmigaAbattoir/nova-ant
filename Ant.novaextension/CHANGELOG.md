@@ -3,6 +3,18 @@
 The format is based on [Keep a Changelog 1.1](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning 2.0](http://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - 2025-07-30
+
+### Added
+
+- Marks issues in the build.xml if there are any
+- Shows notification if there is an issue with the build.xml
+
+### Fixed
+
+- Code used to show notification
+- If there was an error in the build.xml processing abruptly stop
+
 ## [0.9.1] - 2025-07-01
 
 ### Changed
