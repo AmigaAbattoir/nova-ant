@@ -8,7 +8,7 @@ var previousBuildXmlData = "";
 
 const DEFAULT_ANT_EXE = nova.path.join(nova.path.join(nova.extension.path, "apache-ant-1.10.15"),"bin") + "/ant";
 const DEFAULT_PATH = nova.workspace.path;
-const DEFAULT_BUILD_FILE = "build.xml;"
+const DEFAULT_BUILD_FILE = "build.xml";
 const DEFAULT_BUILD_AND_PATH = nova.path.join(DEFAULT_PATH, DEFAULT_BUILD_FILE);
 
 var antBuildXmlFileAndPath = DEFAULT_BUILD_AND_PATH;
@@ -184,7 +184,7 @@ exports.runTarget = function(targetName) {
 
 	var antBuildXmlFileName = getWorkspaceOrGlobalConfig("ant.build.file") ?? DEFAULT_BUILD_FILE;
 
-	// Need to add an argument if the build file is named somethign other than build.xml
+	// Need to add an argument if the build file is named something other than build.xml
 	if(antBuildXmlFileName!="build.xml") {
 		args.push("-buildfile");
 		args.push(antBuildXmlFileName);
@@ -201,6 +201,13 @@ exports.runTarget = function(targetName) {
 	var stdOut = [];
 	var stdErr = [];
 
+	if (nova.inDevMode()) {
+		var argsOut = "";
+		args.forEach(a => argsOut += a + "\n")
+		console.log(" *** CWD::: " + DEFAULT_PATH + " ***");
+		console.log(" *** ARGS:: \\/\\/\\/\n\n" + argsOut + "\n *** ARGS:: /\\/\\/\\");
+	}
+
 	/** @TODO Maybe change to a Task like process that will give a transcription */
 	process.onStdout(function(line) {
 		stdOut.push(line.trim());
@@ -214,7 +221,7 @@ exports.runTarget = function(targetName) {
 		if(stdErr.length>0) {
 			notice.title = "Ant Build Error";
 			notice.body = stdErr.join("\n");
-			notice.actions = [ "Oh no!"];
+			notice.actions = [ "Oh no!", "Copy Log to Clipboard"];
 		} else {
 			notice.title = "Ant Build Success";
 			// Just output the last two lines. Should say successful and the time it took
@@ -222,6 +229,11 @@ exports.runTarget = function(targetName) {
 			notice.actions = [ "Great!"];
 		}
 		noticePromise = nova.notifications.add(notice);
+		noticePromise.then((reply) => {
+			if(reply.actionIdx==1) {
+				nova.clipboard.writeText(stdOut);
+			}
+		})
 	});
 
 	process.start();

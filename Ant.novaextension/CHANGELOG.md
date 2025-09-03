@@ -3,6 +3,16 @@
 The format is based on [Keep a Changelog 1.1](http://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning 2.0](http://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2025-09-03
+
+### Added
+
+- If the build fails, the notification will allow you to copy log to clipboard
+
+### Fixed
+
+- Issue with default build file being marked as "build.xml;"
+
 ## [0.10.0] - 2025-07-30
 
 ### Added
