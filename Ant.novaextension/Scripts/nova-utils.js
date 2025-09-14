@@ -216,7 +216,7 @@ exports.rangeToLspRange = function(document, range) {
  * Opens a file and dumps it into a string.
  * @param {string} filename - The name of the file to open, relative to the workspace
  */
-exports.getStringOfFile = function(filename) {
+exports.getStringOfFile = function(filename, logAsError = true) {
 	var line, contents;
 	try {
 		contents = "";
@@ -231,7 +231,9 @@ exports.getStringOfFile = function(filename) {
 			} while(line && line.length>0);
 		}
 	} catch(error) {
-		console.log("*** ERROR: Could not open file " + filename + " for reading. " + error + " ***");
+		if(logAsError) {
+			console.log("*** ERROR: Could not open file " + filename + " for reading. " + error + " ***");
+		}
 		return null;
 	}
 	return contents;

@@ -18,3 +18,7 @@ Icon
 # Syncthing
 .stfolder/
 .stignore
+
+# Testing files
+build.*
+*-build.xml

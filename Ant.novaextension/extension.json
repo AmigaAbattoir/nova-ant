@@ -3,7 +3,7 @@
 	"name": "Ant",
 	"organization": "Abattoir Software",
 	"description": "Sidebar extension for Nova's Panic to view and run Apache Ant builds",
-	"version": "0.10.1",
+	"version": "0.10.2",
 	"categories": ["sidebars","completions","issues"],
 
 	"main": "main.js",
@@ -65,7 +65,7 @@
 					"id": "antsidebar",
 					"name": "ANT Build Targets",
 					"allowMultiple": false,
-					"placeholderText": "Could not find an Apache Ant 'build.xml' in your workspace.\nYou can also change the location of it in the extension settings.",
+					"placeholderText": "Could not find an Apache Ant Build XML in your workspace.\nYou can also change the location of it in your project's settings.",
 					"placeholderImage": "placeholder",
 					"headerCommands": [
 						{

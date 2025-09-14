@@ -46,12 +46,10 @@ exports.figureBuildFile = function () {
 
 /**
  * Loads and parses the build.xml file and creates the treeview as needed.
- *
- * @param {string} filename - The name of the workspace file to get
  */
-exports.loadAndParseBuildXML = function(filename) {
+exports.loadAndParseBuildXML = function() {
 	// If there's a build.xml, parse it
-	var buildXmlString = getStringOfFile(antBuildXmlFileAndPath);
+	var buildXmlString = getStringOfFile(antBuildXmlFileAndPath, false);
 
 	// If not a valid or empty XML, clear the window
 	if(buildXmlString==null || buildXmlString=="") {
@@ -63,54 +61,53 @@ exports.loadAndParseBuildXML = function(filename) {
 		} else if(buildXmlString=="") {
 			showNotification("Unable to use empty build.xml");
 		}
-		treeView = new TreeView("antsidebar", {
-			dataProvider: null
-		});
-		return;
-	}
 
-	// Parse the XML to JSON.
-	var buildJson = new xmlToJson.ns3x2j(buildXmlString,true);
+		// Make the treeview empty so that the placeholder shows up
+		treeView = new TreeView("antsidebar", { dataProvider: null });
+	} else {
+		// Parse the XML to JSON.
+		var buildJson = new xmlToJson.ns3x2j(buildXmlString,true);
 
-	// If NS3X2J has errors, let's parse them and add issues
-	if(buildJson.error!="") {
-		var errors = buildJson.error.split("\n\n");
+		// If NS3X2J has errors, let's parse them and add issues
+		if(buildJson.error!="") {
+			var errors = buildJson.error.split("\n\n");
 
-		var issues = [];
+			var issues = [];
 
-		for(const err of errors) {
-			const match = err.match(/^Error:\s*(.*?)\s+at position line:\s*(\d+),\s*col:\s*(\d+)/);
-			if (match) {
-				var issue = new Issue();
+			for(const err of errors) {
+				const match = err.match(/^Error:\s*(.*?)\s+at position line:\s*(\d+),\s*col:\s*(\d+)/);
+				if (match) {
+					var issue = new Issue();
 
-				issue.message = match[1];
-				issue.severity = IssueSeverity.Error;
-				issue.line = parseInt(match[2], 10);
-				issue.column = parseInt(match[3], 10);
-				issue.source = "ANT";
+					issue.message = match[1];
+					issue.severity = IssueSeverity.Error;
+					issue.line = parseInt(match[2], 10);
+					issue.column = parseInt(match[3], 10);
+					issue.source = "ANT";
 
-				issues.push(issue);
+					issues.push(issue);
+				}
 			}
+
+			// Pass issues to the issue collector!
+			issuesCol.set("file:///" + antBuildXmlFileAndPath, issues);
+			showNotification("ANT XML Parse Error","Please resolve issues with the build file.","Oh no!","Error");
+		} else {
+			issuesCol.remove("file:///" + antBuildXmlFileAndPath);
+			cancelNotification("Error");
 		}
 
-		// Pass issues to the issue collector!
-		issuesCol.set("file:///" + antBuildXmlFileAndPath, issues);
-		showNotification("ANT XML Parse Error","Please resolve issues with the build file.","Oh no!","Error");
-	} else {
-		issuesCol.remove("file:///" + antBuildXmlFileAndPath);
-		cancelNotification("Error");
+		// Check if the data really changed, if not just leave our tree alone!
+		if(buildJson.xmlString==previousBuildXmlData) {
+			return;
+		}
+
+		// Now, store this so we don't have to rebuild if the same content!
+		previousBuildXmlData = buildJson.xmlString;
+
+		// Create the TreeView
+		treeView = new TreeView("antsidebar", { dataProvider: new AntDataProvider(buildJson) });
 	}
-
-	// Check if the data really changed, if not just leave our tree alone!
-	if(buildJson.xmlString==previousBuildXmlData) {
-		return;
-	}
-
-	// Now, store this so we don't have to rebuild if the same content!
-	previousBuildXmlData = buildJson.xmlString;
-
-	// Create the TreeView
-	treeView = new TreeView("antsidebar", { dataProvider: new AntDataProvider(buildJson) });
 
 	// TreeView implements the Disposable interface
 	nova.subscriptions.add(treeView);
@@ -204,8 +201,8 @@ exports.runTarget = function(targetName) {
 	if (nova.inDevMode()) {
 		var argsOut = "";
 		args.forEach(a => argsOut += a + "\n")
-		console.log(" *** CWD::: " + DEFAULT_PATH + " ***");
-		console.log(" *** ARGS:: \\/\\/\\/\n\n" + argsOut + "\n *** ARGS:: /\\/\\/\\");
+		console.info(" *** CWD::: " + DEFAULT_PATH + " ***");
+		console.info(" *** ARGS:: \\/\\/\\/\n\n" + argsOut + "\n *** ARGS:: /\\/\\/\\");
 	}
 
 	/** @TODO Maybe change to a Task like process that will give a transcription */
@@ -217,16 +214,40 @@ exports.runTarget = function(targetName) {
 	process.onDidExit(function() {
 		nova.notifications.cancel("ant-build-start");
 
+		nova.notifications.cancel("ant-build-results");
 		notice = new NotificationRequest("ant-build-results");
 		if(stdErr.length>0) {
+			var errorMsg = stdErr.join("\n");
 			notice.title = "Ant Build Error";
-			notice.body = stdErr.join("\n");
-			notice.actions = [ "Oh no!", "Copy Log to Clipboard"];
+			notice.body = errorMsg;
+			notice.actions = ["Oh no!", "Copy Log to Clipboard"];
+
+			// Log to console as error
+			console.error(errorMsg);
+
+			// Add issue of where build failed
+			var issues = [];
+			for(const err of stdErr) {
+				const match = err.match(/^(.*?):(\d+):\s*(.*)$/);
+				if (match) {
+					var issue = new Issue();
+
+					issue.message = match[3];
+					issue.severity = IssueSeverity.Error;
+					issue.line = parseInt(match[2], 10);
+					issue.source = "ANT";
+
+					issues.push(issue);
+				}
+			}
+
+			// Pass issues to the issue collector!
+			issuesCol.set("file:///" + antBuildXmlFileAndPath, issues);
 		} else {
 			notice.title = "Ant Build Success";
 			// Just output the last two lines. Should say successful and the time it took
 			notice.body = stdOut.slice(-2,stdOut.length).join("\n");
-			notice.actions = [ "Great!"];
+			notice.actions = ["Great!"];
 		}
 		noticePromise = nova.notifications.add(notice);
 		noticePromise.then((reply) => {
